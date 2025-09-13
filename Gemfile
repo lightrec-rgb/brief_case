@@ -72,3 +72,5 @@ group :test do
 end
 
 gem "devise", "~> 4.9"
+
+gem 'ancestry', '~> 4.3', '>= 4.3.3'
