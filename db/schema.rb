@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_09_13_025154) do
+ActiveRecord::Schema[8.0].define(version: 2025_09_13_032700) do
   create_table "card_templates", force: :cascade do |t|
     t.integer "user_id", null: false
     t.integer "subject_id", null: false
@@ -25,7 +25,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_09_13_025154) do
   create_table "cases", force: :cascade do |t|
     t.integer "user_id", null: false
     t.integer "subject_id", null: false
-    t.integer "card_data_id", null: false
+    t.integer "card_templates_id", null: false
     t.string "full_citation"
     t.string "case_name"
     t.string "case_short_name"
@@ -34,7 +34,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_09_13_025154) do
     t.text "key_principle"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["card_data_id"], name: "index_cases_on_card_data_id"
+    t.index ["card_templates_id"], name: "index_cases_on_card_templates_id"
     t.index ["subject_id"], name: "index_cases_on_subject_id"
     t.index ["user_id"], name: "index_cases_on_user_id"
   end
@@ -67,7 +67,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_09_13_025154) do
 
   add_foreign_key "card_templates", "subjects"
   add_foreign_key "card_templates", "users"
-  add_foreign_key "cases", "card_data", column: "card_data_id"
+  add_foreign_key "cases", "card_templates", column: "card_templates_id"
   add_foreign_key "cases", "subjects"
   add_foreign_key "cases", "users"
   add_foreign_key "subjects", "users"

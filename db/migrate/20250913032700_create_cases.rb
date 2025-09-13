@@ -3,7 +3,7 @@ class CreateCases < ActiveRecord::Migration[8.0]
     create_table :cases do |t|
       t.references :user, null: false, foreign_key: true
       t.references :subject, null: false, foreign_key: true
-      t.references :card_data, null: false, foreign_key: true
+      t.references :card_templates, null: false, foreign_key: true
       t.string :full_citation
       t.string :case_name
       t.string :case_short_name
