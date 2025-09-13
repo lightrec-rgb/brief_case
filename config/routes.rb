@@ -1,7 +1,7 @@
 Rails.application.routes.draw do
   # Devise
   devise_for :users, controllers: {
-    omniauth_callbacks: 'users/omniauth_callbacks'
+    omniauth_callbacks: "users/omniauth_callbacks"
   }
     authenticated :user do
   root "dashboard#index", as: :authenticated_root

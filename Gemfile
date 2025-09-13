@@ -20,14 +20,14 @@ gem "jbuilder"
 # Use Active Model has_secure_password [https://guides.rubyonrails.org/active_model_basics.html#securepassword]
 # gem "bcrypt", "~> 3.1.7"
 
-#Omniauth gems
-gem 'omniauth-google-oauth2'
+# Omniauth gems
+gem "omniauth-google-oauth2"
 gem "omniauth"
-gem 'omniauth-rails_csrf_protection', '~> 1.0'
+gem "omniauth-rails_csrf_protection", "~> 1.0"
 
-#Tailwind gems
-gem 'tailwindcss-ruby'
-gem 'tailwindcss-rails'
+# Tailwind gems
+gem "tailwindcss-ruby"
+gem "tailwindcss-rails"
 
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
 gem "tzinfo-data", platforms: %i[ windows jruby ]
