@@ -10,7 +10,45 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_09_12_085906) do
+ActiveRecord::Schema[8.0].define(version: 2025_09_13_025154) do
+  create_table "card_templates", force: :cascade do |t|
+    t.integer "user_id", null: false
+    t.integer "subject_id", null: false
+    t.string "name"
+    t.string "kind"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["subject_id"], name: "index_card_templates_on_subject_id"
+    t.index ["user_id"], name: "index_card_templates_on_user_id"
+  end
+
+  create_table "cases", force: :cascade do |t|
+    t.integer "user_id", null: false
+    t.integer "subject_id", null: false
+    t.integer "card_data_id", null: false
+    t.string "full_citation"
+    t.string "case_name"
+    t.string "case_short_name"
+    t.text "material_facts"
+    t.text "issue"
+    t.text "key_principle"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["card_data_id"], name: "index_cases_on_card_data_id"
+    t.index ["subject_id"], name: "index_cases_on_subject_id"
+    t.index ["user_id"], name: "index_cases_on_user_id"
+  end
+
+  create_table "subjects", force: :cascade do |t|
+    t.integer "user_id", null: false
+    t.string "name"
+    t.string "ancestry"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["ancestry"], name: "index_subjects_on_ancestry"
+    t.index ["user_id"], name: "index_subjects_on_user_id"
+  end
+
   create_table "users", force: :cascade do |t|
     t.string "email", default: "", null: false
     t.string "encrypted_password", default: "", null: false
@@ -26,4 +64,11 @@ ActiveRecord::Schema[8.0].define(version: 2025_09_12_085906) do
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
   end
+
+  add_foreign_key "card_templates", "subjects"
+  add_foreign_key "card_templates", "users"
+  add_foreign_key "cases", "card_data", column: "card_data_id"
+  add_foreign_key "cases", "subjects"
+  add_foreign_key "cases", "users"
+  add_foreign_key "subjects", "users"
 end
