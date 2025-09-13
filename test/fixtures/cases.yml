@@ -1,0 +1,23 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  user: one
+  subject: one
+  card_data: one
+  full_citation: MyString
+  case_name: MyString
+  case_short_name: MyString
+  material_facts: MyText
+  issue: MyText
+  key_principle: MyText
+
+two:
+  user: two
+  subject: two
+  card_data: two
+  full_citation: MyString
+  case_name: MyString
+  case_short_name: MyString
+  material_facts: MyText
+  issue: MyText
+  key_principle: MyText
