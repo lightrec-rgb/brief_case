@@ -73,4 +73,4 @@ end
 
 gem "devise", "~> 4.9"
 
-gem 'ancestry', '~> 4.3', '>= 4.3.3'
+gem "ancestry", "~> 4.3", ">= 4.3.3"
