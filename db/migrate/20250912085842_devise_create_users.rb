@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-class DeviseCreateUsers < ActiveRecord::Migration[8.0]
+class DeviseCreateUsers < ActiveRecord::Migration[7.1]
   def change
     create_table :users do |t|
       ## Database authenticatable
@@ -13,6 +13,10 @@ class DeviseCreateUsers < ActiveRecord::Migration[8.0]
 
       ## Rememberable
       t.datetime :remember_created_at
+      t.string :provider
+      t.string :uid
+      t.string :avatar_url
+      t.string :name
 
       ## Trackable
       # t.integer  :sign_in_count, default: 0, null: false

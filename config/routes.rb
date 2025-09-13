@@ -1,6 +1,18 @@
 Rails.application.routes.draw do
-  devise_for :users
+  # Devise
+  devise_for :users, controllers: {
+    omniauth_callbacks: 'users/omniauth_callbacks'
+  }
+    authenticated :user do
+  root "dashboard#index", as: :authenticated_root
+  end
+
+  unauthenticated do
+    root "pages#home"
+  end
+
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
+  get "dashboard/index"
 
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.
   # Can be used by load balancers and uptime monitors to verify that the app is live.
