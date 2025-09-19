@@ -9,10 +9,10 @@ class SessionItemsController < ApplicationController
 
   def done
     correct = case params[:correct]
-              when "true"  then true
-              when "false" then false
-              else nil
-              end
+    when "true"  then true
+    when "false" then false
+    else nil
+    end
     @item.mark_done!(correct: correct)
     redirect_back fallback_location: session_path(@item.session)
   end

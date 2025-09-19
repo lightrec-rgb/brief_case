@@ -9,15 +9,14 @@ class Subject < ApplicationRecord
 
   # must have a name, which must be unique within a user and a ancestry hierarchy
   validates :name, presence: true,
-                   uniqueness: { scope: [:user_id, :ancestry], case_sensitive: false }
+                   uniqueness: { scope: [ :user_id, :ancestry ], case_sensitive: false }
 
   # include subjects only for this user.
   scope :owned_by, ->(user) { where(user:) }
 
-  # arrange subjects in alphabetical order 
+  # arrange subjects in alphabetical order
   scope :alphabetical, -> { order(:name) }
   def self.tree_for(user)
     user.subjects.arrange
   end
-  
 end

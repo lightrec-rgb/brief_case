@@ -1,10 +1,10 @@
 class CasesController < ApplicationController
   before_action :authenticate_user!
-  before_action :set_case, only: [:show, :edit, :update, :destroy]
+  before_action :set_case, only: [ :show, :edit, :update, :destroy ]
 
   # get all cases for the current user
   def index
-    @cases = Case.index_for(current_user) 
+    @cases = Case.index_for(current_user)
   end
 
   # build a unsaved case when a user accesses the new form (GET)

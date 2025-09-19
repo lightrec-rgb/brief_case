@@ -25,15 +25,15 @@ class CaseCard < ApplicationRecord
   # create all possible question and answer pairs for the case in an array
   def candidates_for(our_case)
     return [] unless our_case
-    titles = [our_case.case_name, our_case.full_citation, our_case.case_short_name]
+    titles = [ our_case.case_name, our_case.full_citation, our_case.case_short_name ]
                .compact
                .reject { |t| t.respond_to?(:blank?) ? t.blank? : t.to_s.strip.empty? }
 
     titles.flat_map do |t|
       [
-        ["What is the key principle in #{t}?",         our_case.key_principle],
-        ["What are the material facts in #{t}?",       our_case.material_facts],
-        ["What was the issue to be resolved in #{t}?", our_case.issue]
+        [ "What is the key principle in #{t}?",         our_case.key_principle ],
+        [ "What are the material facts in #{t}?",       our_case.material_facts ],
+        [ "What was the issue to be resolved in #{t}?", our_case.issue ]
       ]
     end
   end

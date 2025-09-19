@@ -11,7 +11,7 @@ class CreateCards < ActiveRecord::Migration[8.0]
       t.timestamps
     end
 
-    add_index :cards, [:user_id, :subject_id, :kind]
-    add_index :cards, [:user_id, :subject_id, :name], name: "idx_cards_user_subject_name"
+    add_index :cards, [ :user_id, :subject_id, :kind ]
+    add_index :cards, [ :user_id, :subject_id, :name ], name: "idx_cards_user_subject_name"
   end
 end

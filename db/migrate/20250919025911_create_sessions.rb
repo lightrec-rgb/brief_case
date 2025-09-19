@@ -20,7 +20,7 @@ class CreateSessions < ActiveRecord::Migration[8.0]
       t.timestamps
     end
 
-    add_index :sessions, [:user_id, :subject_id]
+    add_index :sessions, [ :user_id, :subject_id ]
     add_index :sessions, :status
   end
 end

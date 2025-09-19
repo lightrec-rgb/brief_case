@@ -1,14 +1,14 @@
 class SubjectsController < ApplicationController
   # check user is authenticated and so can access options
   before_action :authenticate_user!
-  before_action :set_subject, only: [:show, :edit, :update, :destroy]
+  before_action :set_subject, only: [ :show, :edit, :update, :destroy ]
 
   # load subjects for the current user
   def index
     @tree = Subject.tree_for(current_user)
   end
 
-  # build a hierarchial tree using ancestry gem, sorting by name
+ # build a hierarchial tree using ancestry gem, sorting by name
  def show
   @entries = CardTemplate
                .owned_by(current_user)
@@ -46,14 +46,14 @@ end
     end
   end
 
-  # deletes the subject or proivides error message if it still has child records 
+  # deletes the subject or proivides error message if it still has child records
   def destroy
     @subject.destroy!
     redirect_to subjects_path, notice: "Subject deleted"
   rescue ActiveRecord::InvalidForeignKey
     redirect_to subject_path(@subject), alert: "Cannot delete: subject has dependent records"
   rescue ActiveRecord::RecordNotDestroyed
-    redirect_to subject_path(@subject), alert: @subject.errors.full_messages.to_sentence  
+    redirect_to subject_path(@subject), alert: @subject.errors.full_messages.to_sentence
   end
 
   private

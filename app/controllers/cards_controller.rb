@@ -1,6 +1,6 @@
 class CardsController < ApplicationController
   before_action :authenticate_user!
-  before_action :set_card, only: [:show, :destroy]
+  before_action :set_card, only: [ :show, :destroy ]
 
   # show a single card for testing
   def show
@@ -17,7 +17,7 @@ class CardsController < ApplicationController
       subject:       template.subject,
       kind:          template.kind,
     )
-    
+
     # save the new card shell
     if @card.save
       redirect_to template

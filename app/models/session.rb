@@ -8,8 +8,8 @@ class Session < ApplicationRecord
          -> { order(:position) },
          dependent: :destroy,
          class_name: "SessionItem",
-         inverse_of: :session 
-  
+         inverse_of: :session
+
   STATUSES = {
   draft:       "draft",
   in_progress: "in_progress",
@@ -21,7 +21,7 @@ class Session < ApplicationRecord
   validates :status, presence: true, inclusion: { in: STATUSES.keys.map(&:to_s) }
 
   before_validation :default_status, on: :create
-  # a status allows the user to create a session but not start it, to start it, 
+  # a status allows the user to create a session but not start it, to start it,
   # to stop at some point and to continue, and to complete it
 
   scope :owned_by,    ->(user)    { where(user:) }
@@ -32,8 +32,8 @@ class Session < ApplicationRecord
   def start!
     transaction do
       update!(
-        status: "in_progress", 
-        started_at: (started_at || Time.current), 
+        status: "in_progress",
+        started_at: (started_at || Time.current),
         paused_at: nil
       )
       self.current_pos = 1 if current_pos.to_i < 1
@@ -53,17 +53,17 @@ class Session < ApplicationRecord
   def reset!
     transaction do
       session_items.update_all(
-        state: "pending", 
-        correct: nil, 
-        started_at: nil, 
+        state: "pending",
+        correct: nil,
+        started_at: nil,
         completed_at: nil
       )
       update!(
-        done_count: 0, 
-        current_pos: 1, 
-        status: "in_progress", 
-        started_at: (started_at || Time.current), 
-        paused_at: nil, 
+        done_count: 0,
+        current_pos: 1,
+        status: "in_progress",
+        started_at: (started_at || Time.current),
+        paused_at: nil,
         completed_at: nil
       )
     end
@@ -99,7 +99,7 @@ class Session < ApplicationRecord
 
       item.mark_done!(correct: correct)
 
-      self.done_count  = [done_count.to_i + 1, total_count.to_i].min
+      self.done_count  = [ done_count.to_i + 1, total_count.to_i ].min
       self.current_pos = current_pos.to_i + 1
 
       if current_pos.to_i > total_count.to_i
@@ -135,7 +135,7 @@ class Session < ApplicationRecord
         item_type: obj.class.name,
         item_id:   obj.id,
         position:  idx + 1,
-        state:     "pending" 
+        state:     "pending"
       )
     end
 
@@ -148,7 +148,7 @@ class Session < ApplicationRecord
       status:      "draft",
       started_at:  nil,
       paused_at:   nil,
-      completed_at:nil
+      completed_at: nil
     )
     end
 
@@ -160,5 +160,4 @@ class Session < ApplicationRecord
   def default_status
     self.status ||= "draft"
   end
-  
 end

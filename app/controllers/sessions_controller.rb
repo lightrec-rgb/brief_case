@@ -1,7 +1,7 @@
 class SessionsController < ApplicationController
   before_action :authenticate_user!
   # load the sessions belonging to the current user
-  before_action :set_session, only: [:show, :start, :pause, :resume, :reset, :advance, :destroy]
+  before_action :set_session, only: [ :show, :start, :pause, :resume, :reset, :advance, :destroy ]
 
   # give the user a list of most recent sessions - limit is arbitrary for web view
   def index
@@ -33,7 +33,7 @@ class SessionsController < ApplicationController
                 .joins(card_template: :case_detail)
 
     ensure_global_case_card!
-    
+
     if items.blank?
       @subjects = current_user.subjects.order(:name)
       flash.now[:alert] = "There are no cases for this subject."
@@ -56,7 +56,7 @@ class SessionsController < ApplicationController
     flash.now[:alert] = e.message
     render :new, status: :unprocessable_entity
   end
-  
+
   # show a session
   def show
     @current_item = @session.current_item
@@ -67,7 +67,7 @@ class SessionsController < ApplicationController
     @session.start!
     redirect_to @session
   end
-  
+
   # mark a session as paused
   def pause
     @session.pause!
@@ -89,10 +89,10 @@ class SessionsController < ApplicationController
   # allow the user to mark a card as complete, and move to the next card
   def advance
     correct = case params[:correct]
-              when "true"  then true
-              when "false" then false
-              else nil
-              end
+    when "true"  then true
+    when "false" then false
+    else nil
+    end
     @session.advance!(correct: correct)
     redirect_to @session
   end

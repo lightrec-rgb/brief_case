@@ -1,12 +1,11 @@
 class Card < ApplicationRecord
-  
   belongs_to :user
   belongs_to :subject
   belongs_to :card_template, inverse_of: :card
 
   has_one :case_card, dependent: :destroy, inverse_of: :card
 
-  # card is the parent of types of cards, for now just case. 
+  # card is the parent of types of cards, for now just case.
   # validate kind and card_template
   validates :card_template, presence: true
   validates :kind, presence: true, inclusion: { in: %w[Case] }

@@ -16,7 +16,7 @@ class CreateSessionItems < ActiveRecord::Migration[8.0]
       t.timestamps
     end
 
-    add_index :session_items, [:session_id, :position], unique: true
-    add_index :session_items, [:item_type, :item_id]
+    add_index :session_items, [ :session_id, :position ], unique: true
+    add_index :session_items, [ :item_type, :item_id ]
   end
 end

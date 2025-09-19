@@ -18,11 +18,11 @@ Rails.application.routes.draw do
   resources :card_templates,
             path: "entries",
             as:   :entries,
-            only: [:index, :new, :create, :show, :edit, :update, :destroy]
+            only: [ :index, :new, :create, :show, :edit, :update, :destroy ]
 
 
   # study sessions
-  resources :sessions, only: [:index, :new, :create, :show, :destroy] do
+  resources :sessions, only: [ :index, :new, :create, :show, :destroy ] do
     member do
       post :start
       post :pause
@@ -35,8 +35,8 @@ Rails.application.routes.draw do
   # session items
   resources :session_items, only: [] do
     member do
-      post :seen   
-      post :done   
+      post :seen
+      post :done
     end
   end
 

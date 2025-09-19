@@ -3,7 +3,7 @@ class SessionItem < ApplicationRecord
 
   # allow session_item to point to a card type such as casecard
   belongs_to :item, polymorphic: true
-  
+
   STATES = {
     pending: "pending",
     seen:    "seen",
@@ -11,7 +11,7 @@ class SessionItem < ApplicationRecord
   }.freeze
 
   enum :state, STATES
-   # restrict a card to three states - not yet done, in progress and done.
+  # restrict a card to three states - not yet done, in progress and done.
   validates :state, presence: true, inclusion: { in: STATES.keys.map(&:to_s) }
 
   # create association with subject and user
@@ -20,16 +20,16 @@ class SessionItem < ApplicationRecord
   # mark the card as in progress, maybe seen so as not to confuse with session
   def mark_seen!
     update!(
-      state: "seen", 
+      state: "seen",
       started_at: (started_at || Time.current)
     )
   end
-  
+
   # mark the card as complete
   def mark_done!(correct: nil)
     update!(
-      state: "done", 
-      correct: correct, 
+      state: "done",
+      correct: correct,
       completed_at: Time.current,
       started_at: (started_at || Time.current))
   end

@@ -1,6 +1,6 @@
 class CardTemplatesController < ApplicationController
   before_action :authenticate_user!
-  before_action :set_card, only: [:show, :edit, :update, :destroy]
+  before_action :set_card, only: [ :show, :edit, :update, :destroy ]
 
   # load current user's subjects and pick the active one (or first)
   # build the entries list for the subject
@@ -55,7 +55,7 @@ class CardTemplatesController < ApplicationController
     @entry.build_case_detail unless @entry.case_detail
   end
 
-  # updates the template 
+  # updates the template
   def update
     if @card.update(card_params)
       redirect_to entry_path(@card), notice: "Updated", status: :see_other
@@ -83,7 +83,7 @@ class CardTemplatesController < ApplicationController
   def card_params
     params.require(:card_template).permit(
       :subject_id,
-      case_detail_attributes: [:id, :case_name, :case_short_name, :full_citation, :material_facts, :issue, :key_principle]
+      case_detail_attributes: [ :id, :case_name, :case_short_name, :full_citation, :material_facts, :issue, :key_principle ]
     )
   end
 end

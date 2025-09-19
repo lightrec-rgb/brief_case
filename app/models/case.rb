@@ -1,5 +1,4 @@
 class Case < ApplicationRecord
- 
   belongs_to :card_template, inverse_of: :case_detail
   belongs_to :user
   belongs_to :subject
@@ -31,4 +30,3 @@ class Case < ApplicationRecord
     self.subject ||= card_template&.subject
   end
 end
-
