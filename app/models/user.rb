@@ -1,4 +1,10 @@
 class User < ApplicationRecord
+  has_many :subjects,       dependent: :destroy
+  has_many :card_templates, dependent: :destroy
+  has_many :cases,          dependent: :destroy
+  has_many :cards,          dependent: :destroy      
+  has_many :sessions,       dependent: :destroy
+
 # Include default devise modules. Others available are:
 # Include default devise modules. Others available are:
 # :confirmable, :lockable, :timeoutable, :trackable and :omniauthable

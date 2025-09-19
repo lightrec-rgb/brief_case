@@ -11,6 +11,35 @@ Rails.application.routes.draw do
     root "pages#home"
   end
 
+  # subjects live at /decks
+  resources :subjects, path: "decks"
+
+  # cases live at /entries
+  resources :card_templates,
+            path: "entries",
+            as:   :entries,
+            only: [:index, :new, :create, :show, :edit, :update, :destroy]
+
+
+  # study sessions
+  resources :sessions, only: [:index, :new, :create, :show, :destroy] do
+    member do
+      post :start
+      post :pause
+      post :resume
+      post :reset
+      post :advance
+    end
+  end
+
+  # session items
+  resources :session_items, only: [] do
+    member do
+      post :seen   
+      post :done   
+    end
+  end
+
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
   get "dashboard/index"
 

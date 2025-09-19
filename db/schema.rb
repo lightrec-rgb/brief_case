@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_09_13_032700) do
+ActiveRecord::Schema[8.0].define(version: 2025_09_19_063250) do
   create_table "card_templates", force: :cascade do |t|
     t.integer "user_id", null: false
     t.integer "subject_id", null: false
@@ -22,10 +22,36 @@ ActiveRecord::Schema[8.0].define(version: 2025_09_13_032700) do
     t.index ["user_id"], name: "index_card_templates_on_user_id"
   end
 
+  create_table "cards", force: :cascade do |t|
+    t.integer "user_id", null: false
+    t.integer "subject_id", null: false
+    t.integer "card_template_id"
+    t.string "name", null: false
+    t.string "kind", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["card_template_id"], name: "index_cards_on_card_template_id"
+    t.index ["subject_id"], name: "index_cards_on_subject_id"
+    t.index ["user_id", "subject_id", "kind"], name: "index_cards_on_user_id_and_subject_id_and_kind"
+    t.index ["user_id", "subject_id", "name"], name: "idx_cards_user_subject_name"
+    t.index ["user_id"], name: "index_cards_on_user_id"
+  end
+
+  create_table "case_cards", force: :cascade do |t|
+    t.integer "card_id", null: false
+    t.integer "case_id", null: false
+    t.text "question"
+    t.text "answer"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["card_id"], name: "index_case_cards_on_card_id", unique: true
+    t.index ["case_id"], name: "index_case_cards_on_case_id"
+  end
+
   create_table "cases", force: :cascade do |t|
     t.integer "user_id", null: false
     t.integer "subject_id", null: false
-    t.integer "card_templates_id", null: false
+    t.integer "card_template_id", null: false
     t.string "full_citation"
     t.string "case_name"
     t.string "case_short_name"
@@ -34,9 +60,48 @@ ActiveRecord::Schema[8.0].define(version: 2025_09_13_032700) do
     t.text "key_principle"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["card_templates_id"], name: "index_cases_on_card_templates_id"
+    t.index ["card_template_id"], name: "index_cases_on_card_template_id"
     t.index ["subject_id"], name: "index_cases_on_subject_id"
     t.index ["user_id"], name: "index_cases_on_user_id"
+  end
+
+  create_table "session_items", force: :cascade do |t|
+    t.integer "session_id", null: false
+    t.string "item_type", null: false
+    t.bigint "item_id", null: false
+    t.integer "position", null: false
+    t.string "state", null: false
+    t.boolean "correct"
+    t.datetime "started_at"
+    t.datetime "completed_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.text "question"
+    t.text "answer"
+    t.index ["item_type", "item_id"], name: "index_session_items_on_item_type_and_item_id"
+    t.index ["session_id", "position"], name: "index_session_items_on_session_id_and_position", unique: true
+    t.index ["session_id"], name: "index_session_items_on_session_id"
+  end
+
+  create_table "sessions", force: :cascade do |t|
+    t.integer "user_id", null: false
+    t.integer "subject_id", null: false
+    t.string "name"
+    t.string "status", default: "draft", null: false
+    t.integer "total_count", default: 0, null: false
+    t.integer "done_count", default: 0, null: false
+    t.integer "current_pos", default: 1, null: false
+    t.datetime "started_at"
+    t.datetime "paused_at"
+    t.datetime "completed_at"
+    t.boolean "shuffled", default: true, null: false
+    t.integer "shuffle_seed"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["status"], name: "index_sessions_on_status"
+    t.index ["subject_id"], name: "index_sessions_on_subject_id"
+    t.index ["user_id", "subject_id"], name: "index_sessions_on_user_id_and_subject_id"
+    t.index ["user_id"], name: "index_sessions_on_user_id"
   end
 
   create_table "subjects", force: :cascade do |t|
@@ -67,8 +132,16 @@ ActiveRecord::Schema[8.0].define(version: 2025_09_13_032700) do
 
   add_foreign_key "card_templates", "subjects"
   add_foreign_key "card_templates", "users"
-  add_foreign_key "cases", "card_templates", column: "card_templates_id"
+  add_foreign_key "cards", "card_templates"
+  add_foreign_key "cards", "subjects"
+  add_foreign_key "cards", "users"
+  add_foreign_key "case_cards", "cards"
+  add_foreign_key "case_cards", "cases"
+  add_foreign_key "cases", "card_templates"
   add_foreign_key "cases", "subjects"
   add_foreign_key "cases", "users"
+  add_foreign_key "session_items", "sessions"
+  add_foreign_key "sessions", "subjects"
+  add_foreign_key "sessions", "users"
   add_foreign_key "subjects", "users"
 end
