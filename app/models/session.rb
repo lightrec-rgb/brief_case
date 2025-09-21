@@ -17,7 +17,7 @@ class Session < ApplicationRecord
   completed:   "completed"
   }.freeze
 
-  enum :status, STATUSES
+  enum :status, STATUSES, default: :draft
   validates :status, presence: true, inclusion: { in: STATUSES.keys.map(&:to_s) }
 
   before_validation :default_status, on: :create
@@ -36,7 +36,10 @@ class Session < ApplicationRecord
         started_at: (started_at || Time.current),
         paused_at: nil
       )
-      self.current_pos = 1 if current_pos.to_i < 1
+      if current_pos.to_i < 1
+        first_pending = session_items.where.not(state: "done").order(:position).first
+        self.current_pos = first_pending&.position
+      end
       save!
     end
   end
@@ -70,21 +73,26 @@ class Session < ApplicationRecord
   end
 
   def current_item
-    return nil if current_pos.to_i < 1 || current_pos.to_i > total_count.to_i
-    session_items.find_by(position: current_pos)
+    return nil if total_count.to_i <= 0
+    session_items.find_by(position: current_pos) ||
+      session_items.where.not(state: "done").order(:position).first
   end
 
   def next_item
-    session_items.find_by(position: current_pos.to_i + 1)
+    session_items.where("position > ?", (current_pos || 0))
+                 .where.not(state: "done")
+                 .order(:position)
+                 .first
   end
 
   def prepare_current_item!
     i = current_item
     return unless i
 
-    if i.respond_to?(:build_prompt!) &&
-       i.question.blank? && i.state == "pending"
-      i.build_prompt!
+    if i.state == "pending"
+      i.build_prompt! if i.respond_to?(:build_prompt!) && i.question.blank?
+      i.started_at ||= Time.current
+      i.save!
     end
     i
   end
@@ -92,25 +100,26 @@ class Session < ApplicationRecord
   # track when a user has completed a session
   def advance!(correct: nil)
     transaction do
-      return self if status == "completed" || current_pos.to_i > total_count.to_i
+      return self if status == "completed"
 
       item = current_item
       return self unless item
 
       item.mark_done!(correct: correct)
 
-      self.done_count  = [ done_count.to_i + 1, total_count.to_i ].min
-      self.current_pos = current_pos.to_i + 1
+      self.done_count  = session_items.where(state: "done").count
 
-      if current_pos.to_i > total_count.to_i
-        update!(
-          status:       "completed",
-          completed_at: Time.current,
-          current_pos:  total_count.to_i.clamp(1, total_count.to_i),
-          done_count:   total_count.to_i
-        )
-      else
+      if (ni = next_item)
+        self.current_pos = ni.position
+        self.status      = "in_progress"
         save!
+      else
+          self.current_pos = nil
+          update!(
+            status:       "completed",
+            completed_at: Time.current,
+            done_count:   total_count.to_i
+          )
       end
     end
   end
@@ -144,7 +153,7 @@ class Session < ApplicationRecord
       shuffled:    shuffled,
       total_count: ordered.size,
       done_count:  0,
-      current_pos: 1,
+      current_pos: ordered.size.positive? ? 1 : nil,
       status:      "draft",
       started_at:  nil,
       paused_at:   nil,

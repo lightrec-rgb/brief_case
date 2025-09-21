@@ -22,15 +22,11 @@ Rails.application.routes.draw do
 
 
   # study sessions
-  resources :sessions, only: [ :index, :new, :create, :show, :destroy ] do
-    member do
-      post :start
-      post :pause
-      post :resume
-      post :reset
-      post :advance
-    end
+  resources :sessions, path: "learn", controller: "sessions", only: [ :index, :new, :create, :show, :destroy ] do
+  member do
+    post :start, :pause, :resume, :reset, :advance
   end
+end
 
   # session items
   resources :session_items, only: [] do
@@ -39,6 +35,8 @@ Rails.application.routes.draw do
       post :done
     end
   end
+
+
 
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
   get "dashboard/index"

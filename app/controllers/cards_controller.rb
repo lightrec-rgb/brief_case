@@ -30,8 +30,8 @@ class CardsController < ApplicationController
   def destroy
     entry = @card.card_template
     @card.destroy
-    redirect_to entry
-  end
+    redirect_to entries_path(subject_id: subject_id), notice: "Case deleted", status: :see_other
+end
 
   private
 

@@ -10,7 +10,7 @@ class SessionItem < ApplicationRecord
     done:    "done"
   }.freeze
 
-  enum :state, STATES
+  enum :state, STATES, default: :pending
   # restrict a card to three states - not yet done, in progress and done.
   validates :state, presence: true, inclusion: { in: STATES.keys.map(&:to_s) }
 
@@ -19,10 +19,8 @@ class SessionItem < ApplicationRecord
 
   # mark the card as in progress, maybe seen so as not to confuse with session
   def mark_seen!
-    update!(
-      state: "seen",
-      started_at: (started_at || Time.current)
-    )
+    return if done?
+    update!(state: :seen, started_at: (started_at || Time.current))
   end
 
   # mark the card as complete
@@ -42,7 +40,9 @@ class SessionItem < ApplicationRecord
     return self unless rules && source
 
     pair = rules.build_pair(our_case: source)
-    update!(question: pair[:question], answer: pair[:answer])
+    self.question = pair[:question]
+    self.answer   = pair[:answer]
+    save!
     self
   end
 end

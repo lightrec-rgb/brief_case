@@ -9,6 +9,7 @@ class CardTemplatesController < ApplicationController
     @subject  = @subjects.find_by(id: params[:subject_id]) || @subjects.first
 
     @entries = if @subject
+      subtree = @subject.self_and_descendants
       CardTemplate.owned_by(current_user)
                   .for_subject(@subject)
                   .for_kind("Case")

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_09_19_063250) do
+ActiveRecord::Schema[8.0].define(version: 2025_09_21_043233) do
   create_table "card_templates", force: :cascade do |t|
     t.integer "user_id", null: false
     t.integer "subject_id", null: false
@@ -90,7 +90,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_09_19_063250) do
     t.string "status", default: "draft", null: false
     t.integer "total_count", default: 0, null: false
     t.integer "done_count", default: 0, null: false
-    t.integer "current_pos", default: 1, null: false
+    t.integer "current_pos"
     t.datetime "started_at"
     t.datetime "paused_at"
     t.datetime "completed_at"

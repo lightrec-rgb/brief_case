@@ -11,11 +11,15 @@ class SessionsController < ApplicationController
   # display a form for the user to create a session (GET)
   def new
     @subjects = current_user.subjects.order(:name)
+    @session  = current_user.sessions.new
   end
 
   # build a session (POST)
   def create
-    subject = current_user.subjects.find(params[:subject_id])
+    subject_id = params[:subject_id] || params.dig(:session, :subject_id)
+    name_param = params[:name].presence || params.dig(:session, :name).presence
+    count_param = (params[:count] || params.dig(:session, :count)).to_i
+    subject = current_user.subjects.find(subject_id)
 
     # only templates that actually have a case
     templates = subject.card_templates
@@ -40,8 +44,11 @@ class SessionsController < ApplicationController
       return render :new, status: :unprocessable_entity
     end
 
-    @session = current_user.sessions.new(subject: subject, name: params[:name].presence)
-    @session.build_from_items!(items: items.to_a, name: @session.name)
+    pool = items.to_a
+    pool = pool.sample(count_param) if count_param > 0 && count_param < pool.size
+
+    @session = current_user.sessions.new(subject: subject, name: name_param)
+    @session.build_from_items!(items: pool, name: @session.name)
 
     if @session.save
       redirect_to @session, notice: "Session created"
@@ -51,7 +58,7 @@ class SessionsController < ApplicationController
       render :new, status: :unprocessable_entity
     end
   rescue ArgumentError => e
-    # Handles "There are no cases for this subject" from build_from_items!
+    # "There are no cases for this subject" from build_from_items!
     @subjects = current_user.subjects.order(:name)
     flash.now[:alert] = e.message
     render :new, status: :unprocessable_entity
@@ -59,7 +66,8 @@ class SessionsController < ApplicationController
 
   # show a session
   def show
-    @current_item = @session.current_item
+    @session.start! if @session.draft?
+    @item = @session.prepare_current_item!
   end
 
   # mark a session in progress
@@ -83,16 +91,12 @@ class SessionsController < ApplicationController
   # reset a session
   def reset
     @session.reset!
-    redirect_to @session
+    redirect_to sessions_path
   end
 
   # allow the user to mark a card as complete, and move to the next card
   def advance
-    correct = case params[:correct]
-    when "true"  then true
-    when "false" then false
-    else nil
-    end
+    correct = ActiveModel::Type::Boolean.new.cast(params[:correct])
     @session.advance!(correct: correct)
     redirect_to @session
   end
@@ -100,7 +104,7 @@ class SessionsController < ApplicationController
   # delete the session and its items
   def destroy
     @session.destroy
-    redirect_to sessions_path, notice: "session deleted"
+    redirect_to sessions_path, notice: "Session deleted", status: :see_other
   end
 
   private
@@ -113,7 +117,7 @@ class SessionsController < ApplicationController
     return if CaseCard.exists?
 
     # pick any holder Card of kind "Case" (create one if none yet)
-    holder_card = Card.where(kind: "Case").first   # no need to joins(:card_template)
+    holder_card = Card.where(kind: "Case").first
   unless holder_card
     t = CardTemplate.joins(:case_detail).first
     raise "No Case templates exist to create global CaseCard" unless t
