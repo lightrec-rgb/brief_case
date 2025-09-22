@@ -1,4 +1,56 @@
-<div>
-  <h1 class="font-bold text-4xl">Dashboard#index</h1>
-  <p>Find me in app/views/dashboard/index.html.erb</p>
+<h1 class="text-2xl font-semibold mb-4">Dashboard</h1>
+
+<div class="grid md:grid-cols-3 gap-4">
+  <div class="rounded border p-4">
+    <div class="text-sm text-gray-500">Subjects</div>
+    <div class="text-3xl font-semibold"><%= current_user.subjects.count %></div>
+    <div class="mt-2"><%= link_to "Manage subjects", subjects_path, class: "underline" %></div>
+  </div>
+
+  <div class="rounded border p-4">
+    <div class="text-sm text-gray-500">Cases</div>
+    <div class="text-3xl font-semibold">
+      <%= CardTemplate.owned_by(current_user).for_kind("Case").count %>
+    </div>
+    <div class="mt-2"><%= link_to "Browse cases", entries_path, class: "underline" %></div>
+  </div>
+
+  <div class="rounded border p-4">
+    <div class="text-sm text-gray-500">Cards ready</div>
+    <div class="text-3xl font-semibold">
+      <%= Card.owned_by(current_user).for_kind("Case").count %>
+    </div>
+    <div class="mt-2"><%= link_to "Start learning", new_session_path, class: "underline" %></div>
+  </div>
+</div>
+
+<div class="mt-6">
+  <h2 class="text-xl font-semibold mb-3">Recent sessions</h2>
+  <% sessions = current_user.sessions.order(created_at: :desc).limit(10) %>
+  <% if sessions.blank? %>
+    <p class="text-gray-600">No sessions yet.</p>
+  <% else %>
+    <table class="w-full text-sm">
+      <thead>
+        <tr class="text-left border-b">
+          <th class="py-2 pr-2">Name</th>
+          <th class="py-2 pr-2">Subject</th>
+          <th class="py-2 pr-2">Progress</th>
+          <th class="py-2 pr-2">Status</th>
+          <th class="py-2 pr-2">Open</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% sessions.each do |s| %>
+          <tr class="border-b">
+            <td class="py-2 pr-2"><%= s.name.presence || "Session ##{s.id}" %></td>
+            <td class="py-2 pr-2"><%= s.subject&.name %></td>
+            <td class="py-2 pr-2"><%= s.done_count %>/<%= s.total_count %></td>
+            <td class="py-2 pr-2"><%= session_status_badge(s) %></td>
+            <td class="py-2 pr-2"><%= link_to "Open", session_path(s), class: "underline" %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  <% end %>
 </div>

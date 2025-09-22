@@ -1,0 +1,27 @@
+<h1 class="text-2xl font-semibold mb-4">Start a new session</h1>
+
+<%= form_with model: @session, url: sessions_path, method: :post, class: "grid gap-4 max-w-xl" do |f| %>
+  <div>
+    <%= f.label :subject_id, "Subject", class: "block font-medium" %>
+    <%= f.select :subject_id,
+          options_for_select(subject_options_for_select(current_user), @subject&.id),
+          {},
+          class: "border rounded px-2 py-1 w-full" %>
+  </div>
+
+  <div>
+    <%= f.label :name, "Session name (optional)", class: "block font-medium" %>
+    <%= f.text_field :name, class: "border rounded px-2 py-1 w-full", placeholder: "e.g., Evening Review" %>
+  </div>
+
+  <div>
+    <%= f.label :count, "How many cards? (leave blank for all)", class: "block font-medium" %>
+    <%= f.number_field :count, min: 0, step: 1, class: "border rounded px-2 py-1 w-40" %>
+    <p class="text-xs text-gray-500 mt-1">If 0/blank, all cards in the subject are included.</p>
+  </div>
+
+  <div>
+    <%= f.submit "Create session", class: "bg-brand-blue text-white px-3 py-2 rounded hover:bg-gold" %>
+    <%= link_to "Cancel", sessions_path, class: "ml-3 underline" %>
+  </div>
+<% end %>

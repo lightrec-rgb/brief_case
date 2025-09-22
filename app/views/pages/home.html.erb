@@ -1,4 +1,107 @@
-<h1>Pages#home</h1>
+<!-- Hero -->
+<section class="py-16 mb-16">
+  <div class="mx-auto max-w-5xl px-4">
+    <div class="grid md:grid-cols-2 gap-8 items-center">
+      <div>
+        <h1 class="text-4xl font-bold tracking-tight">
+          Brief/Case — study law cases the smart way
+        </h1>
+        <p class="mt-4 text-gray-600 leading-relaxed">
+          Create subjects, add cases, and practise with focused sessions that present
+          one question at a time. Track progress and build real exam confidence.
+        </p>
 
-<p>Find me in app/views/pages/home.html.erb</p>
+        <div class="mt-6 flex gap-3">
+          <%= link_to "Get started", new_user_registration_path,
+                class: "bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700" %>
+          <%= link_to "Sign in", new_user_session_path,
+                class: "px-4 py-2 rounded-md border hover:bg-gray-50" %>
+        </div>
+      </div>
 
+      <!-- Visual / placeholder -->
+      <div class="rounded-xl border bg-white shadow-sm p-4">
+        <div class="text-sm text-gray-500 mb-2">How it works</div>
+        <ol class="space-y-2 text-sm">
+          <li class="flex gap-2">
+            <span class="inline-flex h-6 w-6 items-center justify-center rounded-full bg-blue-600 text-white text-xs">1</span>
+            Create a <strong>Subject</strong> (e.g., Torts → Negligence).
+          </li>
+          <li class="flex gap-2">
+            <span class="inline-flex h-6 w-6 items-center justify-center rounded-full bg-blue-600 text-white text-xs">2</span>
+            Add a <strong>Case</strong> with citation, facts, issues, principles.
+          </li>
+          <li class="flex gap-2">
+            <span class="inline-flex h-6 w-6 items-center justify-center rounded-full bg-blue-600 text-white text-xs">3</span>
+            Start a <strong>Learn</strong> session to practise using Q&A flashcards.
+          </li>
+        </ol>
+
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Features -->
+<section class="py-12 bg-gray-50 border-t mb-16">
+  <div class="mx-auto max-w-5xl px-4">
+    <h2 class="text-2xl font-semibold">Why Brief/Case?</h2>
+    <div class="mt-6 grid md:grid-cols-3 gap-6">
+      <div class="rounded-lg bg-white p-5 border">
+        <h3 class="font-semibold">Nested subjects</h3>
+        <p class="mt-2 text-gray-600 text-sm">
+          Organise by topic with a collapsible tree (e.g., Torts → Negligence → Duty).
+        </p>
+      </div>
+      <div class="rounded-lg bg-white p-5 border">
+        <h3 class="font-semibold">Structured cases</h3>
+        <p class="mt-2 text-gray-600 text-sm">
+          Capture citation, facts, issue, and key principle for each case.
+        </p>
+      </div>
+      <div class="rounded-lg bg-white p-5 border">
+        <h3 class="font-semibold">Focused sessions</h3>
+        <p class="mt-2 text-gray-600 text-sm">
+          One question at a time, reveal answers, mark outcomes, skip, and resume.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="py-12 mb-16">
+  <div class="mx-auto max-w-5xl px-4 text-center">
+    <h2 class="text-2xl font-semibold">Start learning smarter today</h2>
+    <p class="mt-2 text-gray-600">
+      Join and build your first deck of cases in minutes.
+    </p>
+    <div class="mt-6 flex gap-3 justify-center">
+      <%= link_to "Create an account", new_user_registration_path,
+            class: "bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700" %>
+      <%= link_to "Sign in", new_user_session_path,
+            class: "px-4 py-2 rounded-md border hover:bg-gray-50" %>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section class="py-12 bg-gray-50 border-t mb-16">
+  <div class="mx-auto max-w-5xl px-4">
+    <h2 class="text-2xl font-semibold">FAQ</h2>
+    <div class="mt-6 space-y-4">
+      <details class="rounded-md border bg-white p-4">
+        <summary class="font-semibold cursor-pointer">Is this free?</summary>
+        <p class="mt-2 text-gray-600 text-sm">Yes, you can sign up and start using it immediately.</p>
+      </details>
+      <details class="rounded-md border bg-white p-4">
+        <summary class="font-semibold cursor-pointer">What can I study?</summary>
+        <p class="mt-2 text-gray-600 text-sm">Start with cases; statutes support is planned.</p>
+      </details>
+      <details class="rounded-md border bg-white p-4">
+        <summary class="font-semibold cursor-pointer">Can I come back to a session later?</summary>
+        <p class="mt-2 text-gray-600 text-sm">Yes. Your progress is saved; return via the Learn page.</p>
+      </details>
+    </div>
+  </div>
+</section>

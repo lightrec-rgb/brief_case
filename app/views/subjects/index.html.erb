@@ -1,0 +1,70 @@
+<h1 class="text-2xl font-semibold mb-4">Subjects</h1>
+
+<div class="mb-3 flex gap-2">
+  <%= link_to "New Subject", new_subject_path,
+        class: "bg-brand-blue text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-gold" %>
+
+  <button type="button" class="px-3 py-2 rounded-md text-sm border hover:bg-gray-50" data-tree-expand-all>
+    Expand all
+  </button>
+  <button type="button" class="px-3 py-2 rounded-md text-sm border hover:bg-gray-50" data-tree-collapse-all>
+    Collapse all
+  </button>
+</div>
+
+<ul id="subjects-tree" class="pl-2">
+  <%= render partial: "subject_tree", locals: { nodes: @tree || {}, depth: 0 } %>
+</ul>
+
+<!-- Tiny vanilla JS – no Stimulus/importmap needed -->
+<script>
+  (function () {
+    const root = document.getElementById("subjects-tree");
+    if (!root) return;
+    
+    const LS_KEY = "subjectsTreeExpanded"; // CHANGED: remember state
+    function setAll(expanded) {
+      root.querySelectorAll("[data-tree-branch]").forEach(ul => ul.classList.toggle("hidden", !expanded));
+      root.querySelectorAll("[data-tree-chevron]").forEach(c => c.textContent = expanded ? "▼" : "►");
+      root.querySelectorAll("[data-tree-toggle]").forEach(b => b.setAttribute("aria-expanded", expanded ? "true" : "false"));
+    }
+
+    const persisted = localStorage.getItem(LS_KEY);
+    if (persisted === "expanded") setAll(true);
+    if (persisted === "collapsed") setAll(false);
+      
+    // Toggle a single branch (event delegation)
+    root.addEventListener("click", function (e) {
+      const btn = e.target.closest("[data-tree-toggle]");
+      if (!btn) return;
+
+      const li = btn.closest("li");
+      const branch = li && li.querySelector("[data-tree-branch]");
+      const chevron = li && li.querySelector("[data-tree-chevron]");
+      if (!branch) return;
+
+      branch.classList.toggle("hidden");
+      const expanded = !branch.classList.contains("hidden");
+      btn.setAttribute("aria-expanded", expanded ? "true" : "false");
+      if (chevron) chevron.textContent = expanded ? "▼" : "►";
+    });
+
+    // Expand all
+    const expandAllBtn = document.querySelector("[data-tree-expand-all]");
+    if (expandAllBtn) {
+      expandAllBtn.addEventListener("click", function () {
+        setAll(true);
+        localStorage.setItem(LS_KEY, "expanded");
+      });
+    }
+
+    // Collapse all
+    const collapseAllBtn = document.querySelector("[data-tree-collapse-all]");
+    if (collapseAllBtn) {
+      collapseAllBtn.addEventListener("click", function () {
+        setAll(false);
+        localStorage.setItem(LS_KEY, "collapsed");
+      });
+    }
+  })();
+</script>

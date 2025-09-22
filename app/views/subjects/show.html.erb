@@ -1,0 +1,40 @@
+<h1 class="text-2xl font-semibold mb-4"><%= @subject.name %></h1>
+
+<p class="mb-4">
+  <%= link_to "← Back to Subjects", subjects_path, class: "underline" %>
+</p>
+
+<% if @entries.any? %>
+  <table class="w-full text-sm border-collapse">
+    <thead>
+      <tr class="text-left border-b">
+        <th class="px-3 py-2">Case name</th>
+        <th class="px-3 py-2">Citation</th>
+        <th class="px-3 py-2">Belongs to</th>
+        <th class="px-3 py-2">Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @entries.each do |entry| %>
+        <% c = entry.case_detail %>
+        <% s = entry.subject %>
+        <tr class="border-b">
+          <td class="px-3 py-2"><%= c&.case_name || "(untitled)" %></td>
+          <td class="px-3 py-2"><%= c&.full_citation %></td>
+          <td class="px-3 py-2">
+            <%# Show full breadcrumb; if it's the current subject, you can dim it %>
+            <%= link_to subject_breadcrumb(s),
+                        subject_path(s),
+                        class: (s.id == @subject.id ? "text-gray-500" : "underline") %>
+          </td>
+          <td class="px-3 py-2">
+            <%= link_to "Open", entry_path(entry), class: "underline" %> ·
+            <%= link_to "Edit", edit_entry_path(entry), class: "underline" %>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+<% else %>
+  <p class="text-gray-600">No case info in this subject yet.</p>
+<% end %>

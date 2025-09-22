@@ -1,0 +1,61 @@
+<h1 class="text-2xl font-semibold mb-4">Learn</h1>
+
+<div class="mb-4 flex gap-2">
+  <%= link_to "Start new session", new_session_path, class: "bg-brand-blue text-white px-3 py-2 rounded hover:bg-gold" %>
+</div>
+
+<% if @sessions.blank? %>
+  <p class="text-gray-600">No sessions yet. Start one now.</p>
+<% else %>
+  <table class="w-full text-sm">
+    <thead>
+      <tr class="border-b">
+        <th class="py-2 pr-2">Name</th>
+        <th class="py-2 pr-2">Subject</th>
+        <th class="py-2 pr-2">Progress</th>
+        <th class="px-2 py-2">Score</th>
+        <th class="py-2 pr-2">Status</th>
+        <th class="py-2 pr-2">Updated</th>
+        <th class="py-2 pr-2">Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @sessions.each do |s| %>
+        <tr class="border-b">
+          <td class="py-2 pr-2"><%= s.name.presence || "Session ##{s.id}" %></td>
+          <td class="py-2 pr-2"><%= s.subject&.name %></td>
+          <td class="py-2 pr-2"><%= s.done_count %>/<%= s.total_count %></td>
+          <td class="px-2 py-2">
+          <% if s.completed? %>
+            <% right = s.session_items.where(correct: true).count %>
+            <% total = s.total_count.to_i %>
+            <span title="Right / Total"><%= right %>/<%= total %></span>
+          <% else %>
+            —
+          <% end %>
+        </td>
+        <td class="px-2 py-2"><%= session_status_badge(s) %></td>
+          <td class="py-2 pr-2 text-gray-500"><%= l(s.updated_at, format: :short) %></td>
+          <td class="py-2 pr-2">
+            <%= link_to "Open", session_path(s), class: "underline" %> ·
+            <%= button_to "Reset",
+                  reset_session_path(s),
+                  method: :post,
+                  form:  { data: { turbo_confirm: "Reset this session? Progress will be cleared." }, class: "inline" },
+                  class: "underline bg-transparent p-0 border-0 cursor-pointer align-baseline" %> ·
+            <%= button_to "Delete",
+                  session_path(s),
+                  method: :delete,
+                  data: { turbo_confirm: "Delete this session? You’ll lose its progress permanently." },
+                  form:  {
+                    data: { turbo_confirm: "Delete this session? You’ll lose its progress permanently." },
+                    onsubmit: "return confirm('Delete this session? You’ll lose its progress permanently.')",
+                    class: "inline"
+                  },
+                  class: "underline text-red-600 bg-transparent p-0 border-0 cursor-pointer align-baseline" %>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+<% end %>

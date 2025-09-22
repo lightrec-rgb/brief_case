@@ -1,0 +1,71 @@
+<%# Expect @session set; controller can set @item = @session.prepare_current_item! %>
+
+<div class="mb-3 flex items-center justify-between">
+  <h1 class="text-2xl font-semibold">
+    <%= @session.name.presence || "Session ##{@session.id}" %>
+  </h1>
+  <div>
+    <%= session_status_badge(@session) %>
+  </div>
+</div>
+
+<p class="text-gray-600 mb-4">
+  Subject: <strong><%= @session.subject&.name %></strong> ·
+  Progress: <strong><%= @session.done_count %></strong>/<%= @session.total_count %>
+</p>
+
+<% if @session.completed? %>
+  <div class="rounded border border-green-200 bg-green-50 p-4">
+    <p class="font-semibold mb-2">Session completed 🎉</p>
+    <p>You answered <strong><%= @session.done_count %></strong> out of <strong><%= @session.total_count %></strong> items.</p>
+  </div>
+
+  <div class="mt-4 flex gap-2">
+    <%= link_to "Back to Learn", sessions_path, class: "underline" %>
+    <%= button_to "Reset session", reset_session_path(@session), method: :post,
+          form: { data: { turbo_confirm: "Reset this session?" } },
+          class: "underline" %>
+  </div>
+
+<% else %>
+  <%# Current item %>
+  <% si = @item || @session.prepare_current_item! %>
+  <% if si.present? %>
+    <div class="rounded border p-4">
+      <div class="text-sm text-gray-500 mb-2">Card <%= si.position %> of <%= @session.total_count %></div>
+
+      <h2 class="font-semibold mb-2">Question</h2>
+      <p class="mb-4 whitespace-pre-line"><%= si.question %></p>
+
+      <div id="answer" class="hidden">
+        <h2 class="font-semibold mt-4 mb-2">Answer</h2>
+        <p class="whitespace-pre-line"><%= si.answer %></p>
+
+        <div class="mt-4 flex gap-2">
+          <%= form_with url: advance_session_path(@session), method: :post do |f| %>
+            <%= hidden_field_tag :correct, true %>
+            <%= f.submit "I got it right", class: "bg-green-600 text-white px-3 py-2 rounded hover:bg-green-700" %>
+          <% end %>
+
+          <%= form_with url: advance_session_path(@session), method: :post do |f| %>
+            <%= hidden_field_tag :correct, false %>
+            <%= f.submit "I got it wrong", class: "bg-red-600 text-white px-3 py-2 rounded hover:bg-red-700" %>
+          <% end %>
+        </div>
+      </div>
+
+      <div id="reveal" class="mt-2">
+        <button class="px-3 py-2 rounded border hover:bg-gray-50" onclick="document.getElementById('answer').classList.remove('hidden'); this.parentElement.classList.add('hidden');">
+          Show answer
+        </button>
+      </div>
+    </div>
+
+    <div class="mt-4">
+      <p class="text-sm text-gray-500 mb-2">Progress saves automatically. You can leave any time and return via Learn.</p>
+      <%= link_to "Back to Learn", sessions_path, class: "underline" %>
+    </div>
+  <% else %>
+    <p class="text-gray-600">No current item.</p>
+  <% end %>
+<% end %>

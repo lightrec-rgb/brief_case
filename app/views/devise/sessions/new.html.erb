@@ -1,6 +1,10 @@
 <h2 class="text-2xl font-bold mb-4">Log in</h2>
 
-<%= form_for(resource, as: resource_name, url: session_path(resource_name)) do |f| %>
+<%= form_for(resource,
+             as: resource_name,
+             url: user_session_path,                
+             html: { method: :post },
+             data: { turbo: false }) do |f| %>       
   <div class="space-y-4">
     <div>
       <%= f.label :email, class: "block text-sm font-medium text-gray-700" %>
@@ -8,28 +12,28 @@
             class: "mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" %>
     </div>
 
-  <div>
+    <div>
       <%= f.label :password, class: "block text-sm font-medium text-gray-700" %>
       <%= f.password_field :password, autocomplete: "current-password",
             class: "mt-1 block w-full border border-gray-300 rounded-md px-3 py-2" %>
     </div>
 
-  <!-- Forgot password -->
-  <div class="mt-2 text-right">
-    <%= render "devise/shared/links" %>
-  </div>
-
-  <% if devise_mapping.rememberable? %>
-    <div class="flex items-center gap-2">
+    <% if devise_mapping.rememberable? %>
+      <div class="flex items-center gap-2">
         <%= f.check_box :remember_me, class: "h-4 w-4" %>
         <%= f.label :remember_me, class: "text-sm text-gray-700" %>
       </div>
     <% end %>
-          
-   <div>
+
+    <div>
       <%= f.submit "Log in",
-            class: "w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700" %>
-   </div>
+            class: "w-full bg-brand-blue text-white py-2 rounded-md hover:opacity-90" %>
+    </div>
+
+    <div class="mt-2 text-right">
+      <%= render "devise/shared/links" %>
+    </div>
+  </div>
 <% end %>
 
 <!-- Divider -->
@@ -39,5 +43,4 @@
   <div class="flex-grow border-t border-gray-200"></div>
 </div>
 
-<!-- Google sign in -->
 <%= render "devise/shared/google_button" %>

@@ -1,0 +1,65 @@
+<% @card.build_case_detail unless @card.case_detail %> 
+<%= form_with model: @card,
+              url: (@card.persisted? ? entry_path(@card) : entries_path),
+              method: (@card.persisted? ? :patch : :post) do |f| %>
+  
+  <% if @card.errors.any? || @card.case_detail&.errors&.any? %> <!-- inline error summary -->
+    <div class="mb-3 rounded border border-red-300 bg-red-50 p-3 text-sm text-red-800">
+      <strong>There were problems with your submission:</strong>
+      <ul class="list-disc pl-5">
+        <% @card.errors.full_messages.each { |m| concat content_tag(:li, m) } %>
+        <% @card.case_detail&.errors&.full_messages&.each { |m| concat content_tag(:li, m) } %>
+      </ul>
+    </div>
+  <% end %>
+    
+  <div class="grid gap-4">
+    <div>
+      <%= f.label :subject_id, "Subject" %><br>
+      <%= f.select :subject_id,
+  options_for_select(
+    subject_options_for_select(current_user),      # uses helper
+    (params[:subject_id] || @card.subject_id)      # preselect
+  ),
+  {},
+  class: "border rounded px-2 py-1" %>
+    </div>
+
+    <%= f.fields_for :case_detail do |c| %>
+      <div>
+        <%= c.label :case_name, "Case name" %><br>
+        <%= c.text_field :case_name, class: "w-full border rounded px-2 py-1", required: true, autofocus: true %>
+      </div>
+
+      <div>
+        <%= c.label :case_short_name, "Short name" %><br>
+        <%= c.text_field :case_short_name, class: "w-full border rounded px-2 py-1" %>
+      </div>
+
+      <div>
+        <%= c.label :full_citation, "Full citation" %><br>
+        <%= c.text_field :full_citation, class: "w-full border rounded px-2 py-1" %>
+      </div>
+
+      <div>
+        <%= c.label :material_facts %><br>
+        <%= c.text_area :material_facts, rows: 6, class: "w-full border rounded px-2 py-1" %>
+      </div>
+
+      <div>
+        <%= c.label :issue %><br>
+        <%= c.text_area :issue, rows: 4, class: "w-full border rounded px-2 py-1" %>
+      </div>
+
+      <div>
+        <%= c.label :key_principle %><br>
+        <%= c.text_area :key_principle, rows: 6, class: "w-full border rounded px-2 py-1" %>
+      </div>
+    <% end %>
+
+    <div>
+      <%= f.submit(@card.persisted? ? "Update Case" : "Create Case",
+                   class: "bg-brand-blue text-white px-3 py-2 rounded hover:bg-gold") %>
+    </div>
+  </div>
+<% end %>

@@ -10,8 +10,8 @@ class SessionsController < ApplicationController
 
   # display a form for the user to create a session (GET)
   def new
-    @subjects = current_user.subjects.order(:name)
     @session  = current_user.sessions.new
+    @subjects = current_user.subjects.order(:name)
   end
 
   # build a session (POST)

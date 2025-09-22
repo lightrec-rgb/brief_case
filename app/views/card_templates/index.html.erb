@@ -1,0 +1,63 @@
+<h1 class="text-xl font-semibold mb-4">
+  Case info
+  <% if @subject.present? && @entries.present? %>
+  <span class="ml-2 text-sm text-gray-500">(<%= @entries.size %>)</span>
+  <% end %>
+</h1>
+
+<div class="mb-4 flex items-center gap-3">
+  <%= form_with url: entries_path, method: :get, local: true, class: "flex items-center gap-2" do %>
+    <label class="text-sm text-gray-600">Subject</label>
+    <%= select_tag :subject_id,
+      options_for_select(subject_options_for_select(current_user), @subject&.id),
+       include_blank: current_user.subjects.empty?,
+       class: "border rounded px-2 py-1",
+       onchange: "this.form.requestSubmit()" %>
+  <% end %>
+
+  <% if @subject.present? %>
+    <%= link_to "New case entry", new_entry_path(subject_id: @subject.id),
+          class: "bg-brand-blue text-white px-3 py-2 rounded hover:bg-gold" %>
+  <% end %>
+</div>
+
+<% if @subject.nil? %>
+  <p class="text-gray-600">Create a subject first to add case info.</p>
+<% elsif @entries.none? %>
+  <p class="text-gray-600">No case info in this subject yet.</p>
+<% else %>
+  <table class="w-full text-sm">
+    <thead>
+      <tr class="text-left border-b">
+        <th class="py-2 pr-2">Case name</th>
+        <th class="py-2 pr-2">Citation</th>
+        <th class="py-2 pr-2">Updated</th>
+        <th class="py-2 pr-2">Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @entries.each do |entry| %>
+        <% c = entry.case_detail %>
+        <tr class="border-b">
+          <td class="py-2 pr-2"><%= c&.case_name.presence || "(untitled)" %></td>
+          <td class="py-2 pr-2"><%= c&.full_citation.presence || "—" %></td>
+          <td class="py-2 pr-2 text-gray-500"><%= l(entry.updated_at, format: :short) %></td>
+          <td class="py-2 pr-2">
+            <%= link_to "Show",  entry_path(entry),      class: "underline" %> ·
+            <%= link_to "Edit",  edit_entry_path(entry), class: "underline" %> ·
+            <%= button_to "Delete",
+                  entry_path(entry),
+                  method: :delete,
+                  data: { turbo_confirm: "Delete this case?" },
+                  form:  {
+                    data: { turbo_confirm: "Delete this case?" },
+                    onsubmit: "return confirm('Delete this case?')",
+                    class: "inline"
+                  },
+                  class: "underline text-red-600 bg-transparent p-0 border-0 cursor-pointer align-baseline" %>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+<% end %>
