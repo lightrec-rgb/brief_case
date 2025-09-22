@@ -31,6 +31,7 @@
       <tr class="text-left border-b">
         <th class="py-2 pr-2">Case name</th>
         <th class="py-2 pr-2">Citation</th>
+        <th class="py-2 pr-2">Belongs to</th>
         <th class="py-2 pr-2">Updated</th>
         <th class="py-2 pr-2">Actions</th>
       </tr>
@@ -41,6 +42,9 @@
         <tr class="border-b">
           <td class="py-2 pr-2"><%= c&.case_name.presence || "(untitled)" %></td>
           <td class="py-2 pr-2"><%= c&.full_citation.presence || "—" %></td>
+          <td class="py-2 pr-2">
+          <%= link_to subject_breadcrumb(entry.subject), subject_path(entry.subject), class: "underline" %>
+          </td>
           <td class="py-2 pr-2 text-gray-500"><%= l(entry.updated_at, format: :short) %></td>
           <td class="py-2 pr-2">
             <%= link_to "Show",  entry_path(entry),      class: "underline" %> ·

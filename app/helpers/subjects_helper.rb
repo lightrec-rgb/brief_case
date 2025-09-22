@@ -15,6 +15,10 @@ module SubjectsHelper
     subject.path.map(&:name).join(" › ")
   end
 
+  def subtree_case_count(subject, counts_hash)
+    subject.subtree_ids.sum { |id| counts_hash[id] || 0 }
+  end
+
   def build_subject_pairs(nodes, depth = 0)
     nodes.flat_map do |subject, children|
       label = ("— " * depth) + subject.name

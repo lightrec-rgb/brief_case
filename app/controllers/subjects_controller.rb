@@ -5,7 +5,14 @@ class SubjectsController < ApplicationController
 
   # load subjects for the current user
   def index
-    @tree = current_user.subjects.arrange(order: :name)
+    # @tree = current_user.subjects.arrange(order: :name)
+    @subjects = current_user.subjects.order(:name)
+    @tree     = @subjects.arrange(order: :name)
+    @case_counts = CardTemplate
+                     .owned_by(current_user)
+                     .joins(:case_detail)
+                     .group(:subject_id)
+                     .count
   end
 
  # build a hierarchial tree using ancestry gem, sorting by name

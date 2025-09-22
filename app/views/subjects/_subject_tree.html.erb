@@ -13,6 +13,10 @@
       <% end %>
 
       <span class="font-medium"><%= subject.name %></span>
+      <span class="ml-1 inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-700"
+            title="Total cases in this subject and all children">
+        <%= subtree_case_count(subject, @case_counts) %>
+      </span>
 
       <% case_count = CardTemplate.for_subject(subject).for_kind("Case").count rescue 0 %>
       <span class="ml-1 text-xs text-gray-500">(<%= case_count %>)</span>
