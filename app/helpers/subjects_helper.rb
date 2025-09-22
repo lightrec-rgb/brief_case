@@ -1,5 +1,4 @@
 module SubjectsHelper
-  # returns array of [label, id] with nesting dashes
   def subject_options_for_select(user)
     tree = user.subjects.arrange(order: :name)
     build_subject_pairs(tree)
