@@ -1,5 +1,4 @@
-class Card 
-
+class Card
   attr_reader :card_template
 
   def initialize(card_template:)

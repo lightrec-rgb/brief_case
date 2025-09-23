@@ -37,7 +37,7 @@ class SessionsController < ApplicationController
   # Fetch the template
   templates = subject.card_templates
                      .owned_by(current_user)
-                     .joins(:case_detail)  
+                     .joins(:case_detail)
                      .includes(:case_detail)
                      .ordered
 
@@ -49,13 +49,13 @@ class SessionsController < ApplicationController
 
   bank = templates.to_a
   if count_param.positive?
-  desired = [count_param, bank.size].min
+  desired = [ count_param, bank.size ].min
   bank = bank.sample(desired)
   end
 
   # Create the session and build items / cards
   @session = current_user.sessions.new(subject: subject, name: name_param)
-  @session.build_from_items!(items: bank, name: @session.name)  
+  @session.build_from_items!(items: bank, name: @session.name)
 
   # Validate session created
   if @session.save

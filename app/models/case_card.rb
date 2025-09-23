@@ -1,6 +1,5 @@
-class CaseCard 
-  
-  def initialize(card) 
+class CaseCard
+  def initialize(card)
     @card = card
   end
 
@@ -19,9 +18,9 @@ class CaseCard
 
     candidates = titles.flat_map do |t|
       [
-        ["What is the key principle in #{t}?",         our_case.key_principle],
-        ["What are the material facts in #{t}?",       our_case.material_facts],
-        ["What was the issue to be resolved in #{t}?", our_case.issue]
+        [ "What is the key principle in #{t}?",         our_case.key_principle ],
+        [ "What are the material facts in #{t}?",       our_case.material_facts ],
+        [ "What was the issue to be resolved in #{t}?", our_case.issue ]
       ]
     end
 
