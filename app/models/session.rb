@@ -125,7 +125,7 @@ class Session < ApplicationRecord
   end
 
 
-  # build a deck, assign card positions, and initialize a counter.
+  # build a deck, assign card positions, and initialise a counter.
   def build_from_items!(items:, shuffled: true, name: nil)
   raise ArgumentError, "There are no cases for this subject" if items.blank?
 

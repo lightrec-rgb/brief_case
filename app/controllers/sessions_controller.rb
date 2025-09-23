@@ -16,53 +16,55 @@ class SessionsController < ApplicationController
 
   # build a session (POST)
   def create
-    subject_id = params[:subject_id] || params.dig(:session, :subject_id)
-    name_param = params[:name].presence || params.dig(:session, :name).presence
-    count_param = (params[:count] || params.dig(:session, :count)).to_i
-    subject = current_user.subjects.find(subject_id)
+  # Load subjects
+  @subjects = current_user.subjects.order(:name)
 
-    # only templates that actually have a case
-    templates = subject.card_templates
-                       .owned_by(current_user)
-                       .joins(:case_detail)
-                       .includes(:case_detail)
+  # Read input from the user to create the session
+  subject_id = params.dig(:session, :subject_id)
+  name_param = params.dig(:session, :name).presence || "Session - #{Time.current.strftime('%-d %b %Y')}"
+  count_param = params.dig(:session, :count).to_i
 
-    existing_cards = Card.where(user: current_user, subject: subject).pluck(:card_template_id)
-    (templates.map(&:id) - existing_cards).each do |template_id|
-      t = CardTemplate.find(template_id)
-      Card.create!(user: current_user, subject: subject, card_template: t, kind: t.kind)
-    end
-
-    items = Card.where(user: current_user, subject: subject)
-                .joins(card_template: :case_detail)
-
-    ensure_global_case_card!
-
-    if items.blank?
-      @subjects = current_user.subjects.order(:name)
-      flash.now[:alert] = "There are no cases for this subject."
+  # Validation that a subject has been selected
+  unless subject_id.present?
+      @session = current_user.sessions.new
+      flash.now[:alert] = "Please choose a subject"
       return render :new, status: :unprocessable_entity
-    end
+  end
 
-    pool = items.to_a
-    pool = pool.sample(count_param) if count_param > 0 && count_param < pool.size
+  # Find the subject
+  subject = current_user.subjects.find(subject_id)
 
-    @session = current_user.sessions.new(subject: subject, name: name_param)
-    @session.build_from_items!(items: pool, name: @session.name)
+  # Fetch the template
+  templates = subject.card_templates
+                     .owned_by(current_user)
+                     .joins(:case_detail)  
+                     .includes(:case_detail)
+                     .ordered
 
-    if @session.save
+  if templates.empty?
+    @session = current_user.sessions.new
+    flash.now[:alert] = "There are no cases for this subject"
+    return render :new, status: :unprocessable_entity
+  end
+
+  bank = templates.to_a
+  if count_param.positive?
+  desired = [count_param, bank.size].min
+  bank = bank.sample(desired)
+  end
+
+  # Create the session and build items / cards
+  @session = current_user.sessions.new(subject: subject, name: name_param)
+  @session.build_from_items!(items: bank, name: @session.name)  
+
+  # Validate session created
+  if @session.save
       redirect_to @session, notice: "Session created"
-    else
-      @subjects = current_user.subjects.order(:name)
+  else
       flash.now[:alert] = "Could not create session"
       render :new, status: :unprocessable_entity
-    end
-  rescue ArgumentError => e
-    # "There are no cases for this subject" from build_from_items!
-    @subjects = current_user.subjects.order(:name)
-    flash.now[:alert] = e.message
-    render :new, status: :unprocessable_entity
   end
+end
 
   # show a session
   def show
@@ -111,22 +113,5 @@ class SessionsController < ApplicationController
 
   def set_session
     @session = current_user.sessions.find(params[:id])
-  end
-
-  def ensure_global_case_card!
-    return if CaseCard.exists?
-
-    # pick any holder Card of kind "Case" (create one if none yet)
-    holder_card = Card.where(kind: "Case").first
-  unless holder_card
-    t = CardTemplate.joins(:case_detail).first
-    raise "No Case templates exist to create global CaseCard" unless t
-    holder_card = Card.create!(user: t.user, subject: t.subject, card_template: t, kind: t.kind, name: t.name)
-  end
-
-  placeholder_case = Case.first || holder_card.card_template.case_detail
-  raise "No Case record found to attach to global CaseCard" unless placeholder_case
-
-  CaseCard.create!(card: holder_card, case: placeholder_case)
   end
 end

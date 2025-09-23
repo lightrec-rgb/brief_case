@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_09_21_043233) do
+ActiveRecord::Schema[8.0].define(version: 2025_09_23_011926) do
   create_table "card_templates", force: :cascade do |t|
     t.integer "user_id", null: false
     t.integer "subject_id", null: false
@@ -20,32 +20,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_09_21_043233) do
     t.datetime "updated_at", null: false
     t.index ["subject_id"], name: "index_card_templates_on_subject_id"
     t.index ["user_id"], name: "index_card_templates_on_user_id"
-  end
-
-  create_table "cards", force: :cascade do |t|
-    t.integer "user_id", null: false
-    t.integer "subject_id", null: false
-    t.integer "card_template_id"
-    t.string "name", null: false
-    t.string "kind", null: false
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.index ["card_template_id"], name: "index_cards_on_card_template_id"
-    t.index ["subject_id"], name: "index_cards_on_subject_id"
-    t.index ["user_id", "subject_id", "kind"], name: "index_cards_on_user_id_and_subject_id_and_kind"
-    t.index ["user_id", "subject_id", "name"], name: "idx_cards_user_subject_name"
-    t.index ["user_id"], name: "index_cards_on_user_id"
-  end
-
-  create_table "case_cards", force: :cascade do |t|
-    t.integer "card_id", null: false
-    t.integer "case_id", null: false
-    t.text "question"
-    t.text "answer"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.index ["card_id"], name: "index_case_cards_on_card_id", unique: true
-    t.index ["case_id"], name: "index_case_cards_on_case_id"
   end
 
   create_table "cases", force: :cascade do |t|
@@ -132,11 +106,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_09_21_043233) do
 
   add_foreign_key "card_templates", "subjects"
   add_foreign_key "card_templates", "users"
-  add_foreign_key "cards", "card_templates"
-  add_foreign_key "cards", "subjects"
-  add_foreign_key "cards", "users"
-  add_foreign_key "case_cards", "cards"
-  add_foreign_key "case_cards", "cases"
   add_foreign_key "cases", "card_templates"
   add_foreign_key "cases", "subjects"
   add_foreign_key "cases", "users"
