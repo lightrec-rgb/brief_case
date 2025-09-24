@@ -36,7 +36,11 @@ end
     end
   end
 
-
+  # Acts and provisions
+  resources :acts, only: [:index, :new, :create, :show, :edit, :update] do
+    # Provisions are created under an Act
+    resources :statutes, only: [:new, :create, :edit, :update]
+  end
 
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
   get "dashboard/index"

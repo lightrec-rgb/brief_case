@@ -1,29 +1,86 @@
 <h1 class="text-2xl font-semibold mb-4">Dashboard</h1>
 
-<div class="grid md:grid-cols-3 gap-4">
+<%# ------- Quick counts ------- %>
+<% subjects_count   = current_user.subjects.count %>
+<% acts_count       = current_user.acts.count rescue 0 %>
+<% cases_count      = CardTemplate.owned_by(current_user).left_joins(:case_detail).where("cases.id IS NOT NULL").count %>
+<% provisions_count = CardTemplate.owned_by(current_user).left_joins(:statute_detail).where("statutes.id IS NOT NULL").count %>
+<% cards_ready      = cases_count + provisions_count %>
+
+<div class="grid md:grid-cols-2 gap-4">
   <div class="rounded border p-4">
     <div class="text-sm text-gray-500">Subjects</div>
-    <div class="text-3xl font-semibold"><%= current_user.subjects.count %></div>
-    <div class="mt-2"><%= link_to "Manage subjects", subjects_path, class: "underline" %></div>
+    <div class="text-3xl font-semibold"><%= subjects_count %></div>
+    <div class="mt-2">
+      <%= link_to "Manage subjects", subjects_path, class: "underline" %>
+    </div>
   </div>
 
   <div class="rounded border p-4">
-    <div class="text-sm text-gray-500">Cases</div>
-    <div class="text-3xl font-semibold">
-      <%= CardTemplate.owned_by(current_user).for_kind("Case").count %>
+    <div class="text-sm text-gray-500">Acts</div>
+    <div class="text-3xl font-semibold"><%= acts_count %></div>
+    <div class="mt-2">
+      <%= link_to "Add Act", new_act_path, class: "underline" %>
     </div>
-    <div class="mt-2"><%= link_to "Browse cases", entries_path, class: "underline" %></div>
+  </div>
+
+  <div class="rounded border p-4">
+    <div class="text-sm text-gray-500">Provisions</div>
+    <div class="text-3xl font-semibold"><%= provisions_count %></div>
+    <div class="mt-2">
+      <%# Entries page is now the one-stop for managing Acts/Provisions %>
+      <%= link_to "Manage provisions", entries_path, class: "underline" %>
+    </div>
   </div>
 
   <div class="rounded border p-4">
     <div class="text-sm text-gray-500">Cards ready</div>
-    <div class="text-3xl font-semibold">
-      <%= CardTemplate.owned_by(current_user).for_kind("Case").count %>
+    <div class="text-3xl font-semibold"><%= cards_ready %></div>
+    <div class="mt-2">
+      <%= link_to "Start learning", new_session_path, class: "underline" %>
     </div>
-    <div class="mt-2"><%= link_to "Start learning", new_session_path, class: "underline" %></div>
   </div>
 </div>
 
+<%# ------- Quick actions row (optional) ------- %>
+<div class="mt-4 flex flex-wrap gap-3">
+  <%= link_to "New Case",
+      new_entry_path(kind: "Case"),
+      class: "bg-brand-blue text-white px-3 py-2 rounded hover:bg-gold" %>
+
+  <%= link_to "New Act",
+      new_act_path,
+      class: "bg-brand-blue text-white px-3 py-2 rounded hover:bg-gold" %>
+
+  <%= link_to "Browse Entries",
+      entries_path,
+      class: "underline" %>
+</div>
+
+<%# ------- Continue last session (optional) ------- %>
+<% last_active = current_user.sessions.where(status: [:in_progress, :paused]).order(updated_at: :desc).first %>
+<% if last_active.present? %>
+  <div class="mt-6 rounded border p-4 bg-gray-50">
+    <div class="flex items-center justify-between">
+      <div>
+        <div class="text-sm text-gray-500">Continue</div>
+        <div class="font-semibold">
+          <%= last_active.name.presence || "Session ##{last_active.id}" %>
+          <span class="ml-2 text-sm text-gray-600">
+            • <%= last_active.subject&.name %>
+            • <%= last_active.done_count %>/<%= last_active.total_count %>
+          </span>
+        </div>
+      </div>
+      <div>
+        <%= link_to "Open", session_path(last_active),
+            class: "bg-brand-blue text-white px-3 py-2 rounded hover:bg-gold" %>
+      </div>
+    </div>
+  </div>
+<% end %>
+
+<%# ------- Recent sessions ------- %>
 <div class="mt-6">
   <h2 class="text-xl font-semibold mb-3">Recent sessions</h2>
   <% sessions = current_user.sessions.order(created_at: :desc).limit(10) %>

@@ -17,7 +17,7 @@ class CasesController < ApplicationController
   def create
     @case = Case.build_for(user: current_user, attrs: {})
     if @case.save_from(case_params)
-      redirect_to entry_path(@case.card_template), notice: "Case created.", status: :see_other
+      redirect_to entry_path(@case.card_template), notice: "Case created", status: :see_other
     else
       @subjects_for_select = current_user.subjects.order(:name).pluck(:name, :id)
       render :new, status: :unprocessable_entity
@@ -35,7 +35,7 @@ class CasesController < ApplicationController
   # updates when the edit form is submitted or provide an error (PATCH/PUT)
   def update
     if @case.update_from(case_params)
-      redirect_to entry_path(@case.card_template), notice: "Case updated.", status: :see_other
+      redirect_to entry_path(@case.card_template), notice: "Case updated", status: :see_other
     else
       @subjects_for_select = current_user.subjects.order(:name).pluck(:name, :id)
       render :edit, status: :unprocessable_entity
@@ -46,7 +46,7 @@ class CasesController < ApplicationController
   def destroy
     subject_id = @case.card_template.subject_id
     @case.destroy
-    redirect_to entries_path(subject_id: subject_id), notice: "Case deleted.", status: :see_other
+    redirect_to entries_path(subject_id: subject_id), notice: "Case deleted", status: :see_other
   end
 
   private

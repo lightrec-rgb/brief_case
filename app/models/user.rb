@@ -4,6 +4,7 @@ class User < ApplicationRecord
   has_many :cases,          dependent: :destroy
   has_many :cards,          dependent: :destroy
   has_many :sessions,       dependent: :destroy
+  has_many :acts,           dependent: :destroy
 
 # Include default devise modules. Others available are:
 # Include default devise modules. Others available are:

@@ -1,24 +1,51 @@
-<% c = @entry.case_detail %>
-<h1 class="text-xl font-semibold mb-2"><%= c&.case_name.presence || "(untitled)" %></h1>
-<p class="text-gray-600 mb-2"><strong>Subject:</strong> <%= @entry.subject&.name %></p>
-<p class="mb-4"><strong>Citation:</strong> <%= c&.full_citation.presence || "—" %></p>
+<% if @entry.kind == "Case" %>
+  <% c = @entry.case_detail %>
+  <h1 class="text-xl font-semibold mb-2"><%= c&.case_name.presence || "(untitled)" %></h1>
+  <p class="text-gray-600 mb-2"><strong>Subject:</strong> <%= @entry.subject&.name %></p>
+  <p class="mb-4"><strong>Citation:</strong> <%= c&.full_citation.presence || "—" %></p>
 
-<div class="grid gap-4">
-  <div>
-    <h2 class="font-semibold">Material Facts</h2>
-    <%= c&.material_facts.present? ? simple_format(c.material_facts) : content_tag(:p, "—", class: "text-gray-500") %>
+  <div class="grid gap-4">
+    <div>
+      <h2 class="font-semibold">Material Facts</h2>
+      <%= c&.material_facts.present? ? simple_format(c.material_facts) : content_tag(:p, "—", class: "text-gray-500") %>
+    </div>
+    <div class="mt-8">
+      <h2 class="font-semibold">Issue</h2>
+      <%= c&.issue.present? ? simple_format(c.issue) : content_tag(:p, "—", class: "text-gray-500") %>
+    </div>
+    <div class="mt-8">
+      <h2 class="font-semibold">Key Principle</h2>
+      <%= c&.key_principle.present? ? simple_format(c.key_principle) : content_tag(:p, "—", class: "text-gray-500") %>
+    </div>
   </div>
-  <div class="mt-8">
-    <h2 class="font-semibold">Issue</h2>
-    <%= c&.issue.present? ? simple_format(c.issue) : content_tag(:p, "—", class: "text-gray-500") %>
+
+<% elsif @entry.kind == "Statute" %>
+  <% s = @entry.statute_detail %>
+  <h1 class="text-xl font-semibold mb-2">
+    <%= (s&.act_short_name.presence || s&.act_name.presence || "(untitled)") %>
+  </h1>
+  <p class="text-gray-600 mb-2"><strong>Subject:</strong> <%= @entry.subject&.name %></p>
+  <p class="mb-4"><strong>Provision:</strong> <%= s&.provision_ref.presence || "—" %></p>
+
+  <div class="grid gap-4">
+    <div>
+      <h2 class="font-semibold">Provision Text</h2>
+      <%= s&.provision_text.present? ? simple_format(s.provision_text) : content_tag(:p, "—", class: "text-gray-500") %>
+    </div>
+    <div class="mt-8 grid gap-4 md:grid-cols-2">
+      <div>
+        <h2 class="font-semibold">Jurisdiction</h2>
+        <%= s&.jurisdiction.present? ? s.jurisdiction : content_tag(:span, "—", class: "text-gray-500") %>
+      </div>
+      <div>
+        <h2 class="font-semibold">Year</h2>
+        <%= s&.year.present? ? s.year : content_tag(:span, "—", class: "text-gray-500") %>
+      </div>
+    </div>
   </div>
-  <div class="mt-8">
-    <h2 class="font-semibold">Key Principle</h2>
-    <%= c&.key_principle.present? ? simple_format(c.key_principle) : content_tag(:p, "—", class: "text-gray-500") %>
-  </div>
-</div>
+<% end %>
 
 <p class="mt-6">
   <%= link_to "Edit", edit_entry_path(@entry), class: "underline" %> ·
-  <%= link_to "Back to Case info", entries_path(subject_id: @entry.subject_id), class: "underline" %>
+  <%= link_to "Back to Entries", entries_path(subject_id: @entry.subject_id), class: "underline" %>
 </p>

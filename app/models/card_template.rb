@@ -3,19 +3,23 @@ class CardTemplate < ApplicationRecord
   belongs_to :subject
 
   # kind of template, eg case or statute
-  validates :kind, presence: true, inclusion: { in: %w[Case] }
+  KINDS = %w[Case Statute].freeze
+  validates :kind, presence: true, inclusion: { in: KINDS }
 
   # one-to-one relationship with case_detail. Will delete the case when deleted.
   # create and edit the case with card_template parameters in controllers
   has_one :case_detail, class_name: "Case", dependent: :destroy, inverse_of: :card_template
+  has_one :statute_detail, class_name: "Statute", dependent: :destroy, inverse_of: :card_template
+
   accepts_nested_attributes_for :case_detail
+  accepts_nested_attributes_for :statute_detail
 
   # filters by user, subject and kind (just case for now). Order by newest first.
   scope :owned_by,    ->(user)    { where(user:) }
   scope :for_subject, ->(subject) { where(subject:) }
   scope :for_kind,    ->(k)       { where(kind: k) }
-  scope :ordered,     ->          { order(id: :desc) }
 
+  # strategy for templates
   def as_card
   Card.new(card_template: self)
   end

@@ -10,7 +10,21 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_09_23_011926) do
+ActiveRecord::Schema[8.0].define(version: 2025_09_24_051446) do
+  create_table "acts", force: :cascade do |t|
+    t.integer "user_id", null: false
+    t.integer "subject_id", null: false
+    t.string "act_name", null: false
+    t.string "act_short_name"
+    t.string "jurisdiction"
+    t.integer "year"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["subject_id"], name: "index_acts_on_subject_id"
+    t.index ["user_id", "subject_id", "act_name", "jurisdiction", "year"], name: "index_acts_unique_in_subject", unique: true
+    t.index ["user_id"], name: "index_acts_on_user_id"
+  end
+
   create_table "card_templates", force: :cascade do |t|
     t.integer "user_id", null: false
     t.integer "subject_id", null: false
@@ -38,6 +52,10 @@ ActiveRecord::Schema[8.0].define(version: 2025_09_23_011926) do
     t.index ["subject_id"], name: "index_cases_on_subject_id"
     t.index ["user_id"], name: "index_cases_on_user_id"
   end
+
+# Could not dump table "saved_acts" because of following NoMethodError
+#   undefined method 'size' for nil
+
 
   create_table "session_items", force: :cascade do |t|
     t.integer "session_id", null: false
@@ -78,6 +96,21 @@ ActiveRecord::Schema[8.0].define(version: 2025_09_23_011926) do
     t.index ["user_id"], name: "index_sessions_on_user_id"
   end
 
+  create_table "statutes", force: :cascade do |t|
+    t.integer "card_template_id", null: false
+    t.string "act_name", null: false
+    t.string "act_short_name"
+    t.string "jurisdiction"
+    t.string "year"
+    t.string "provision_ref", null: false
+    t.text "provision_text"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.integer "act_id"
+    t.index ["act_id"], name: "index_statutes_on_act_id"
+    t.index ["card_template_id"], name: "index_statutes_on_card_template_id", unique: true
+  end
+
   create_table "subjects", force: :cascade do |t|
     t.integer "user_id", null: false
     t.string "name"
@@ -104,13 +137,19 @@ ActiveRecord::Schema[8.0].define(version: 2025_09_23_011926) do
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
   end
 
+  add_foreign_key "acts", "subjects"
+  add_foreign_key "acts", "users"
   add_foreign_key "card_templates", "subjects"
   add_foreign_key "card_templates", "users"
   add_foreign_key "cases", "card_templates"
   add_foreign_key "cases", "subjects"
   add_foreign_key "cases", "users"
+  add_foreign_key "saved_acts", "subjects"
+  add_foreign_key "saved_acts", "users"
   add_foreign_key "session_items", "sessions"
   add_foreign_key "sessions", "subjects"
   add_foreign_key "sessions", "users"
+  add_foreign_key "statutes", "acts"
+  add_foreign_key "statutes", "card_templates", on_delete: :cascade
   add_foreign_key "subjects", "users"
 end

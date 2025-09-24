@@ -12,9 +12,6 @@ class Case < ApplicationRecord
   # when a case is created, inherit user and subject from the associated card_template
   before_validation :inherit_user_and_subject, on: :create
 
-  # order cases alphabetically when queried
-  scope :alphabetical, -> { order(:case_name) }
-
   private
 
   # method to clean up case information

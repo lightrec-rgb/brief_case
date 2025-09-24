@@ -13,13 +13,20 @@
       <% end %>
 
       <span class="font-medium"><%= subject.name %></span>
+
+      <!-- subtree total (cases + statutes) -->
+      <% total_subtree = subtree_case_count(subject, @entry_counts || {}) %>
       <span class="ml-1 inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-700"
-            title="Total cases in this subject and all children">
-        <%= subtree_case_count(subject, @case_counts) %>
+            title="Total entries (cases + statutes) in this subject and all children">
+        <%= total_subtree %>
       </span>
 
-      <% case_count = CardTemplate.for_subject(subject).for_kind("Case").count rescue 0 %>
-      <span class="ml-1 text-xs text-gray-500">(<%= case_count %>)</span>
+      <!-- direct entries in this subject only (cases + statutes) -->
+      <% entry_count = (CardTemplate.for_subject(subject)
+                                   .left_joins(:case_detail, :statute_detail)
+                                   .where("cases.id IS NOT NULL OR statutes.id IS NOT NULL")
+                                   .count rescue 0) %>
+      <span class="ml-1 text-xs text-gray-500">(<%= entry_count %>)</span>
 
       <span class="text-gray-400 text-xs">
         (<%= link_to "Show", subject_path(subject) %> ·
@@ -27,10 +34,10 @@
         <%= button_to "Delete",
               subject_path(subject),
               method: :delete,
-              data: { turbo_confirm: "Delete this subject? (Only works if it has no sub-subjects or cases.)" },
+              data: { turbo_confirm: "Delete this subject? (Only works if it has no sub-subjects or entries.)" },
               form:  {
-                data: { turbo_confirm: "Delete this subject? (Only works if it has no sub-subjects or cases.)" },
-                onsubmit: "return confirm('Delete this subject? (Only works if it has no sub-subjects or cases.)')",  # ← hard fallback
+                data: { turbo_confirm: "Delete this subject? (Only works if it has no sub-subjects or entries.)" },
+                onsubmit: "return confirm('Delete this subject? (Only works if it has no sub-subjects or entries.)')",
                 class: "inline"
               },
               class: "underline text-red-600 bg-transparent p-0 border-0 cursor-pointer align-baseline" %>)

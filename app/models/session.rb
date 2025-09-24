@@ -127,7 +127,7 @@ class Session < ApplicationRecord
 
   # build a deck, assign card positions, and initialise a counter.
   def build_from_items!(items:, shuffled: true, name: nil)
-  raise ArgumentError, "There are no cases for this subject" if items.blank?
+  raise ArgumentError, "There are no entries for this subject" if items.blank?
 
   transaction do
     # ensure the parent exists

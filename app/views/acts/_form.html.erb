@@ -1,0 +1,37 @@
+<%= form_with model: @act do |f| %>
+  <div class="mb-3">
+    <%= f.label :subject_id, "Subject" %>
+    <%= f.select :subject_id,
+          options_for_select(subject_options_for_select(current_user), @act.subject_id),
+          {}, class: "border rounded px-2 py-1 w-full" %>
+  </div>
+
+  <div class="mb-3">
+    <%= f.label :act_name, "Act name" %>
+    <%= f.text_field :act_name, class: "border p-2 w-full", required: true, autofocus: true %>
+  </div>
+
+  <div class="mb-3">
+    <%= f.label :act_short_name, "Short name" %>
+    <%= f.text_field :act_short_name, class: "border p-2 w-full" %>
+  </div>
+
+  <div class="grid gap-4 md:grid-cols-2">
+    <div>
+      <%= f.label :jurisdiction %>
+      <%= f.text_field :jurisdiction, class: "border p-2 w-full" %>
+    </div>
+    <div>
+      <%= f.label :year %>
+      <%= f.number_field :year, class: "border p-2 w-full", min: 0, step: 1 %>
+    </div>
+  </div>
+
+  <div class="mt-4 flex items-center gap-3">
+    <%= f.submit (@act.persisted? ? "Update Act" : "Save"),
+          class: "px-4 py-2 rounded bg-brand-blue text-white hover:bg-gold" %>
+    <%= link_to "Cancel",
+          entries_path(subject_id: (@act.subject_id || params[:subject_id])),
+          class: "underline text-sm" %>
+  </div>
+<% end %>

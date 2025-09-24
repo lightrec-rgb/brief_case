@@ -1,0 +1,12 @@
+<h1 class="text-xl font-semibold mb-4">Edit Act</h1>
+
+<% if @act.errors.any? %>
+  <div class="mb-3 rounded border border-red-300 bg-red-50 p-3 text-sm text-red-800">
+    <strong>There were problems with your submission:</strong>
+    <ul class="list-disc pl-5">
+      <% @act.errors.full_messages.each { |m| concat content_tag(:li, m) } %>
+    </ul>
+  </div>
+<% end %>
+
+<%= render "form" %>

@@ -37,13 +37,13 @@ class SessionsController < ApplicationController
   # Fetch the template
   templates = subject.card_templates
                      .owned_by(current_user)
-                     .joins(:case_detail)
-                     .includes(:case_detail)
-                     .ordered
+                     .left_joins(:case_detail, :statute_detail)
+                     .includes(:case_detail, :statute_detail)
+                     .where("cases.id IS NOT NULL OR statutes.id IS NOT NULL")
 
   if templates.empty?
     @session = current_user.sessions.new
-    flash.now[:alert] = "There are no cases for this subject"
+    flash.now[:alert] = "There are no entries for this subject"
     return render :new, status: :unprocessable_entity
   end
 
