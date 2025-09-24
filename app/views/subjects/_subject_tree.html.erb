@@ -14,17 +14,17 @@
 
       <span class="font-medium"><%= subject.name %></span>
 
-      <!-- subtree total (cases + statutes) -->
+      <!-- subtree total (cases + provisions) -->
       <% total_subtree = subtree_case_count(subject, @entry_counts || {}) %>
       <span class="ml-1 inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-700"
-            title="Total entries (cases + statutes) in this subject and all children">
+            title="Total entries (cases + provisions) in this subject and all children">
         <%= total_subtree %>
       </span>
 
-      <!-- direct entries in this subject only (cases + statutes) -->
+      <!-- direct entries in this subject only (cases + provisions) -->
       <% entry_count = (CardTemplate.for_subject(subject)
-                                   .left_joins(:case_detail, :statute_detail)
-                                   .where("cases.id IS NOT NULL OR statutes.id IS NOT NULL")
+                                   .left_joins(:case_detail, :provision_detail)
+                                   .where("cases.id IS NOT NULL OR provisions.id IS NOT NULL")
                                    .count rescue 0) %>
       <span class="ml-1 text-xs text-gray-500">(<%= entry_count %>)</span>
 

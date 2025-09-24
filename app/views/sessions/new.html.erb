@@ -13,6 +13,24 @@
     <%= f.label :name, "Session name (optional)", class: "block font-medium" %>
     <%= f.text_field :name, class: "border rounded px-2 py-1 w-full", placeholder: "e.g., Evening Review" %>
   </div>
+  <div>
+  <span class="block font-medium">Entry type</span>
+  <div class="mt-1 space-y-1 text-sm">
+    <label class="inline-flex items-center gap-2">
+      <%= f.radio_button :entry_scope, "both", checked: true %>
+      <span>Both (cases and provisions)</span>
+    </label>
+    <label class="inline-flex items-center gap-2">
+      <%= f.radio_button :entry_scope, "cases" %>
+      <span>Cases only</span>
+    </label>
+    <label class="inline-flex items-center gap-2">
+      <%= f.radio_button :entry_scope, "provisions" %>
+      <span>Provisions only</span>
+    </label>
+  </div>
+  <p class="text-xs text-gray-500 mt-1">Choose what to include in this session.</p>
+</div>
 
   <div>
     <%= f.label :count, "How many cards? (leave blank for all)", class: "block font-medium" %>

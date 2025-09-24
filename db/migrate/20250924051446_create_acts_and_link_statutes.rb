@@ -14,7 +14,7 @@ class CreateActsAndLinkStatutes < ActiveRecord::Migration[8.0]
     add_reference :statutes, :act, foreign_key: true, null: true
 
     # Index to keep names tidy per user/subject
-    add_index :acts, [:user_id, :subject_id, :act_name, :jurisdiction, :year],
+    add_index :acts, [ :user_id, :subject_id, :act_name, :jurisdiction, :year ],
               unique: true,
               name: :index_acts_unique_in_subject
   end

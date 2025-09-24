@@ -10,15 +10,15 @@ class Card
   def subject     = card_template.subject
   def kind        = card_template.kind
   def name        = card_template.name.presence || "#{subject&.name || 'Untitled'} - #{kind}"
- 
+
   def case_detail = card_template.case_detail
-  def statute_detail = card_template.statute_detail
+  def provision_detail = card_template.provision_detail
 
   # Rules for strategy
   def build_pair
     case kind
     when "Case"    then CaseCard.new(self).build_pair
-    when "Statute" then StatuteCard.new(self).build_pair
+    when "Provision" then ProvisionCard.new(self).build_pair
     else
       { question: nil, answer: nil }
     end

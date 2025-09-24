@@ -23,6 +23,7 @@ class SessionsController < ApplicationController
   subject_id = params.dig(:session, :subject_id)
   name_param = params.dig(:session, :name).presence || "Session - #{Time.current.strftime('%-d %b %Y')}"
   count_param = params.dig(:session, :count).to_i
+  entry_scope = params.dig(:session, :entry_scope).presence || "both"
 
   # Validation that a subject has been selected
   unless subject_id.present?
@@ -37,9 +38,20 @@ class SessionsController < ApplicationController
   # Fetch the template
   templates = subject.card_templates
                      .owned_by(current_user)
-                     .left_joins(:case_detail, :statute_detail)
-                     .includes(:case_detail, :statute_detail)
-                     .where("cases.id IS NOT NULL OR statutes.id IS NOT NULL")
+                     .left_joins(:case_detail, :provision_detail)
+                     .includes(:case_detail, :provision_detail)
+                     .where("cases.id IS NOT NULL OR provisions.id IS NOT NULL")
+
+  # Filter by kind
+  templates =
+    case entry_scope
+    when "cases"
+      templates.where("cases.id IS NOT NULL")
+    when "provisions"
+      templates.where("provisions.id IS NOT NULL")
+    else # "both"
+      templates
+    end
 
   if templates.empty?
     @session = current_user.sessions.new

@@ -1,16 +1,18 @@
-<h1 class="text-xl font-semibold mb-4">Edit Provision — <%= @act.display_name %></h1>
+<h1 class="text-xl font-semibold mb-4">Add Provision to <%= @act.display_name %></h1>
 
-<% if @entry.errors.any? || @entry.statute_detail&.errors&.any? %>
+<% if @entry.errors.any? || @entry.provision_detail&.errors&.any? %>
   <div class="mb-3 rounded border border-red-300 bg-red-50 p-3 text-sm text-red-800">
     <strong>There were problems with your submission:</strong>
     <ul class="list-disc pl-5">
       <% @entry.errors.full_messages.each { |m| concat content_tag(:li, m) } %>
-      <% @entry.statute_detail&.errors&.full_messages&.each { |m| concat content_tag(:li, m) } %>
+      <% @entry.provision_detail&.errors&.full_messages&.each { |m| concat content_tag(:li, m) } %>
     </ul>
   </div>
 <% end %>
 
-<%= form_with model: @entry, url: act_statute_path(@act, @statute), method: :patch do |f| %>
+<%= form_with model: @entry, url: act_provisions_path(@act) do |f| %>
+  <%= f.hidden_field :kind, value: "Provision" %>
+
   <div class="mb-3">
     <%= f.label :name, "Entry name (optional)" %>
     <%= f.text_field :name, class: "border p-2 w-full" %>
@@ -19,14 +21,11 @@
   <div class="mb-3 text-sm text-gray-700">
     <strong>Act:</strong>
     <%= [@act.act_short_name.presence || @act.act_name, @act.year, @act.jurisdiction].compact.join(" ") %>
-    <span class="ml-2">•</span>
-    <%= link_to "Edit Act header", edit_act_path(@act), class: "underline text-sm ml-1" %>
   </div>
 
-  <%= f.fields_for :statute_detail do |s| %>
-    <%= s.hidden_field :id %>
+  <%= f.fields_for :provision_detail do |s| %>
     <div class="mb-3">
-      <%= s.label :provision_ref, "Provision ref" %>
+      <%= s.label :provision_ref, "Provision ref (e.g., s 48(1)(c))" %>
       <%= s.text_field :provision_ref, class: "border p-2 w-full", required: true, autofocus: true %>
     </div>
 
@@ -37,7 +36,7 @@
   <% end %>
 
   <div class="mt-4 flex items-center gap-3">
-    <%= f.submit "Update Provision", class: "px-4 py-2 rounded bg-brand-blue text-white hover:bg-gold" %>
+    <%= f.submit "Add Provision", class: "px-4 py-2 rounded bg-brand-blue text-white hover:bg-gold" %>
     <%= link_to "Cancel",
           entries_path(subject_id: @act.subject_id, anchor: "act-#{@act.id}"),
           class: "underline text-sm" %>

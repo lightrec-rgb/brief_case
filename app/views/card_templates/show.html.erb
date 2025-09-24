@@ -19,8 +19,8 @@
     </div>
   </div>
 
-<% elsif @entry.kind == "Statute" %>
-  <% s = @entry.statute_detail %>
+<% elsif @entry.kind == "Provision" %>
+  <% s = @entry.provision_detail %>
   <h1 class="text-xl font-semibold mb-2">
     <%= (s&.act_short_name.presence || s&.act_name.presence || "(untitled)") %>
   </h1>

@@ -1,12 +1,9 @@
 class ActsController < ApplicationController
   before_action :authenticate_user!
-  before_action :set_act, only: [:show, :edit, :update]
-
-  def index
-    redirect_to entries_path and return
-  end
+  before_action :set_act, only: [ :show, :edit, :update ]
 
   def new
+    # Preselect the subject from the Entries page link: new_act_path(subject_id: @subject.id)
     @subject = current_user.subjects.find_by(id: params[:subject_id])
     @act = current_user.acts.new(subject: @subject)
   end
@@ -14,7 +11,8 @@ class ActsController < ApplicationController
   def create
     @act = current_user.acts.new(act_params)
     if @act.save
-      redirect_to act_path(@act), notice: "Act created"
+      redirect_to entries_path(subject_id: @act.subject_id, anchor: "act-#{@act.id}"),
+                  notice: "Act created"
     else
       @subject = @act.subject
       render :new, status: :unprocessable_entity
@@ -22,7 +20,9 @@ class ActsController < ApplicationController
   end
 
   def show
-    redirect_to entries_path(subject_id: @act.subject_id, anchor: "act-#{@act.id}")
+    @provisions = @act.provisions.joins(:card_template)
+                      .includes(:card_template)
+                      .order(Arel.sql("LOWER(COALESCE(provision_ref,''))"))
   end
 
   def edit; end
@@ -37,7 +37,6 @@ class ActsController < ApplicationController
   end
 
   private
-
   def set_act
     @act = current_user.acts.includes(:subject).find(params[:id])
   end

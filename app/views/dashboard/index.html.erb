@@ -4,7 +4,7 @@
 <% subjects_count   = current_user.subjects.count %>
 <% acts_count       = current_user.acts.count rescue 0 %>
 <% cases_count      = CardTemplate.owned_by(current_user).left_joins(:case_detail).where("cases.id IS NOT NULL").count %>
-<% provisions_count = CardTemplate.owned_by(current_user).left_joins(:statute_detail).where("statutes.id IS NOT NULL").count %>
+<% provisions_count = CardTemplate.owned_by(current_user).left_joins(:provision_detail).where("provisions.id IS NOT NULL").count %>
 <% cards_ready      = cases_count + provisions_count %>
 
 <div class="grid md:grid-cols-2 gap-4">

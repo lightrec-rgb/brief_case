@@ -1,11 +1,11 @@
-class Statute < ApplicationRecord
-  belongs_to :card_template, inverse_of: :statute_detail
-  belongs_to :act, optional: true, inverse_of: :statutes
+class Provision < ApplicationRecord
+  belongs_to :card_template, inverse_of: :provision_detail
+  belongs_to :act, optional: true
 
   validates :provision_ref, presence: true
   validates :act, presence: true, on: :create
 
-  # When creating under an Act, copy the Act header into the statute fields
+  # When creating under an Act, copy the Act header into the provision fields
   before_validation :copy_act_header, on: :create
 
   private

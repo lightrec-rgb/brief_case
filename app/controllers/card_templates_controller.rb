@@ -11,20 +11,32 @@ class CardTemplatesController < ApplicationController
     @entries =
     if @subject
       subtree_ids = @subject.subtree_ids
+
+      # existing entries (Cases + Provision entries)
       CardTemplate.owned_by(current_user)
                   .where(subject_id: subtree_ids)
-                  .left_joins(:case_detail, :statute_detail)
-                  .includes(:subject, :case_detail, statute_detail: :act)
-                  .where("cases.id IS NOT NULL OR statutes.id IS NOT NULL")
+                  .left_joins(:case_detail, :provision_detail)
+                  .includes(:subject, :case_detail, provision_detail: :act)
+                  .where("cases.id IS NOT NULL OR provisions.id IS NOT NULL")
                   .reorder(Arel.sql(<<~SQL.squish))
                     CASE card_templates.kind
-                      WHEN 'Case' THEN LOWER(COALESCE(cases.case_short_name, cases.case_name, card_templates.name, ''))
-                      WHEN 'Statute' THEN LOWER(COALESCE(statutes.act_short_name, statutes.act_name, card_templates.name, ''))
+                      WHEN 'Case'      THEN LOWER(COALESCE(cases.case_short_name, cases.case_name, card_templates.name, ''))
+                      WHEN 'Provision' THEN LOWER(COALESCE(provisions.act_short_name, provisions.act_name, card_templates.name, ''))
                       ELSE LOWER(COALESCE(card_templates.name, ''))
                     END ASC
                   SQL
     else
       CardTemplate.none
+    end
+
+    if @subject
+    subtree_ids = @subject.subtree_ids
+    @acts = current_user.acts
+                        .where(subject_id: subtree_ids)
+                        .includes(:subject, :provisions)
+                        .order(:act_name, :year, :jurisdiction)
+    else
+      @acts = Act.none
     end
   end
 
@@ -32,7 +44,7 @@ class CardTemplatesController < ApplicationController
   # set up a new card_template with presets
   # build the case so UI form shows fields
   def new
-    @subject = current_user.subjects.find_by(id:params[:subject_id])
+    @subject = current_user.subjects.find_by(id: params[:subject_id])
     kind = params[:kind].presence || "Case"
     @entry   = CardTemplate.new(user: current_user, subject: @subject, kind: kind)
     build_detail_for(@entry)
@@ -85,7 +97,7 @@ class CardTemplatesController < ApplicationController
   #  find the card_template for the current user and hard guards to serve Case
   def set_card
     @card = CardTemplate.owned_by(current_user)
-                        .includes(:subject, :case_detail, :statute_detail)
+                        .includes(:subject, :case_detail, :provision_detail)
                         .find(params[:id])
   end
 
@@ -93,7 +105,7 @@ class CardTemplatesController < ApplicationController
   def build_detail_for(entry)
     case entry.kind
     when "Case"    then entry.build_case_detail    unless entry.case_detail
-    when "Statute" then entry.build_statute_detail unless entry.statute_detail
+    when "Provision" then entry.build_provision_detail unless entry.provision_detail
     end
   end
 
@@ -102,9 +114,8 @@ class CardTemplatesController < ApplicationController
     params.require(:card_template).permit(
       :subject_id,
       :kind,
-      case_detail_attributes:    [:id, :case_name, :case_short_name, :full_citation, :material_facts, :issue, :key_principle],
-      statute_detail_attributes: [:id, :act_name, :act_short_name, :jurisdiction, :year, :provision_ref, :provision_text]
+      case_detail_attributes:    [ :id, :case_name, :case_short_name, :full_citation, :material_facts, :issue, :key_principle ],
+      provision_detail_attributes: [ :id, :act_name, :act_short_name, :jurisdiction, :year, :provision_ref, :provision_text ]
     )
   end
 end
-

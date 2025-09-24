@@ -10,7 +10,7 @@ class CreateSavedStatute < ActiveRecord::Migration[8.0]
     end
 
     add_index :saved_acts,
-              [:user_id, :act_name, :jurisdiction, :year],
+              [ :user_id, :act_name, :jurisdiction, :year ],
               unique: true,
               name: "index_saved_acts_on_user_and_act"
   end
