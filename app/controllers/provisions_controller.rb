@@ -1,7 +1,7 @@
 class ProvisionsController < ApplicationController
   before_action :authenticate_user!
   before_action :set_act
-  before_action :set_provision, only: [ :edit, :update ]
+  before_action :set_provision, only: [ :edit, :update, :destroy ]
 
   def new
     @entry = current_user.card_templates.new(subject: @act.subject, kind: "Provision")
@@ -48,6 +48,15 @@ class ProvisionsController < ApplicationController
     end
   end
 
+  def destroy
+    if @provision
+      @provision.destroy
+      redirect_to entries_path(subject_id: @act.subject_id, anchor: "act-#{@act.id}"),
+                status: :see_other,
+                notice: "Provision deleted"
+    end
+  end
+
   private
 
   def set_act
@@ -55,7 +64,18 @@ class ProvisionsController < ApplicationController
   end
 
   def set_provision
-    @provision = @act.provisions.find(params[:id])
+    @provision = Provision.find_by(id: params[:id])
+
+    if @provision.nil?
+      redirect_back fallback_location: entries_path(subject_id: @act.subject_id, anchor: "act-#{@act.id}"),
+                    alert: "Provision not found"
+      return
+    end
+
+    if @provision.act_id != @act.id
+      redirect_back fallback_location: entries_path(subject_id: @act.subject_id, anchor: "act-#{@act.id}"),
+                    alert: "This provision belongs to a different Act"
+    end
   end
 
   def entry_params

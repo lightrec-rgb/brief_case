@@ -82,6 +82,7 @@ end
   def show
     @session.start! if @session.draft?
     @item = @session.prepare_current_item!
+    @options = @item&.preview_options || {}
   end
 
   # mark a session in progress
@@ -110,8 +111,9 @@ end
 
   # allow the user to mark a card as complete, and move to the next card
   def advance
-    correct = ActiveModel::Type::Boolean.new.cast(params[:correct])
-    @session.advance!(correct: correct)
+    rating = params[:rating].to_i
+    rating = 3 unless (1..4).include?(rating) # default to GOOD
+    @session.advance_with_rating!(rating)
     redirect_to @session
   end
 

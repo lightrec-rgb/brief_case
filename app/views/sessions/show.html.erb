@@ -1,4 +1,4 @@
-<%# Expect @session set; controller can set @item = @session.prepare_current_item! %>
+<%# Expect @session set; controller sets @item = @session.prepare_current_item! %>
 
 <div class="mb-3 flex items-center justify-between">
   <h1 class="text-2xl font-semibold">
@@ -9,63 +9,107 @@
   </div>
 </div>
 
+<%# Progress (due-based) %>
+<% new_cards    = @session.new_count %>
+<% review_cards = @session.review_count %>
+<% due_now      = @session.due_count %>
+
 <p class="text-gray-600 mb-4">
   Subject: <strong><%= @session.subject&.name %></strong> ·
-  Progress: <strong><%= @session.done_count %></strong>/<%= @session.total_count %>
+  New: <strong><%= new_cards %></strong> ·
+  Review (total): <strong><%= review_cards %></strong> ·
+  Due now: <strong><%= due_now %></strong>/<%= @session.total_count %>
 </p>
 
-<% if @session.completed? %>
-  <div class="rounded border border-green-200 bg-green-50 p-4">
-    <p class="font-semibold mb-2">Session completed 🎉</p>
-    <p>You answered <strong><%= @session.done_count %></strong> out of <strong><%= @session.total_count %></strong> items.</p>
-  </div>
+<%# Current item %>
+<% si = @item || @session.prepare_current_item! %>
 
-  <div class="mt-4 flex gap-2">
-    <%= link_to "Back to Learn", sessions_path, class: "underline" %>
-    <%= button_to "Reset session", reset_session_path(@session), method: :post,
-          form: { data: { turbo_confirm: "Reset this session?" } },
-          class: "underline" %>
+<% if si.present? %>
+  <% options = si.preview_options %>
+
+  <div class="rounded border p-4">
+    <div class="text-sm text-gray-500 mb-2">Card <%= si.position %> of <%= @session.total_count %></div>
+
+    <h2 class="font-semibold mb-2">Question</h2>
+    <p class="mb-4 whitespace-pre-line"><%= si.question.presence || "(No question text)" %></p>
+
+    <div id="reveal" class="mt-2">
+      <button
+        class="px-3 py-2 rounded border hover:bg-gray-50"
+        onclick="document.getElementById('answer').classList.remove('hidden'); this.parentElement.classList.add('hidden');"
+      >
+        Show answer
+      </button>
+    </div>
+
+    <div id="answer" class="hidden">
+      <h2 class="font-semibold mt-4 mb-2">Answer</h2>
+      <p class="whitespace-pre-line mb-4"><%= si.answer.presence || "(No answer text)" %></p>
+
+      <%# ---- Preview + Buttons table (2 rows, 4 columns) ---- %>
+      <%= form_with url: advance_session_path(@session), method: :post do %>
+        <table class="w-full text-center">
+          <tr class="text-xs text-gray-600">
+            <% [1,2,3,4].each do |rating| %>
+              <% info = options[rating] %>
+              <td class="p-1 align-middle">
+                <% if info.present? %>
+                  <% due = info[:due_at] %>
+                  <span title="<%= l(due, format: :long) %>">
+                    <%= distance_of_time_in_words(Time.current, due, include_seconds: true) %>
+                  </span>
+                <% else %>
+                  <span>—</span>
+                <% end %>
+              </td>
+            <% end %>
+          </tr>
+          <tr>
+            <td class="p-1">
+              <button name="rating" value="1" type="submit" class="px-3 py-2 rounded border w-full hover:bg-gray-50">Again</button>
+            </td>
+            <td class="p-1">
+              <button name="rating" value="2" type="submit" class="px-3 py-2 rounded border w-full hover:bg-gray-50">Hard</button>
+            </td>
+            <td class="p-1">
+              <button name="rating" value="3" type="submit" class="px-3 py-2 rounded border w-full hover:bg-gray-50">Good</button>
+            </td>
+            <td class="p-1">
+              <button name="rating" value="4" type="submit" class="px-3 py-2 rounded border w-full hover:bg-gray-50">Easy</button>
+            </td>
+          </tr>
+        </table>
+      <% end %>
+    </div> <!-- /#answer -->
+  </div> <!-- /.rounded border -->
+
+  <div class="mt-4">
+    <p class="text-sm text-gray-500 mb-2">Progress saves automatically. You can leave any time and return via Learn.</p>
+    <%= link_to 'Back to Learn', sessions_path, class: 'underline' %>
   </div>
 
 <% else %>
-  <%# Current item %>
-  <% si = @item || @session.prepare_current_item! %>
-  <% if si.present? %>
-    <div class="rounded border p-4">
-      <div class="text-sm text-gray-500 mb-2">Card <%= si.position %> of <%= @session.total_count %></div>
+  <div class="rounded border p-4 bg-green-50">
+    <p class="font-semibold mb-2">All caught up for now 🎉</p>
+    <p>Nothing is due at this moment. Come back when cards are due again.</p>
+  </div>
+  <div class="mt-4">
+    <%= link_to 'Back to Learn', sessions_path, class: 'underline' %>
+  </div>
+<% end %>
 
-      <h2 class="font-semibold mb-2">Question</h2>
-      <p class="mb-4 whitespace-pre-line"><%= si.question %></p>
-
-      <div id="answer" class="hidden">
-        <h2 class="font-semibold mt-4 mb-2">Answer</h2>
-        <p class="whitespace-pre-line"><%= si.answer %></p>
-
-        <div class="mt-4 flex gap-2">
-          <%= form_with url: advance_session_path(@session), method: :post do |f| %>
-            <%= hidden_field_tag :correct, true %>
-            <%= f.submit "I got it right", class: "bg-green-600 text-white px-3 py-2 rounded hover:bg-green-700" %>
-          <% end %>
-
-          <%= form_with url: advance_session_path(@session), method: :post do |f| %>
-            <%= hidden_field_tag :correct, false %>
-            <%= f.submit "I got it wrong", class: "bg-red-600 text-white px-3 py-2 rounded hover:bg-red-700" %>
-          <% end %>
-        </div>
-      </div>
-
-      <div id="reveal" class="mt-2">
-        <button class="px-3 py-2 rounded border hover:bg-gray-50" onclick="document.getElementById('answer').classList.remove('hidden'); this.parentElement.classList.add('hidden');">
-          Show answer
-        </button>
-      </div>
-    </div>
-
-    <div class="mt-4">
-      <p class="text-sm text-gray-500 mb-2">Progress saves automatically. You can leave any time and return via Learn.</p>
-      <%= link_to "Back to Learn", sessions_path, class: "underline" %>
-    </div>
-  <% else %>
-    <p class="text-gray-600">No current item.</p>
-  <% end %>
+<%# --- Auto-refresh when the next card becomes due (if it's soon) --- %>
+<% next_due = @session.session_items.where("due_at > ?", Time.current.utc).minimum(:due_at) %>
+<% if next_due.present? %>
+  <script>
+    (function () {
+      var serverNow = new Date("<%= Time.current.utc.iso8601 %>");
+      var nextDue   = new Date("<%= next_due.utc.iso8601 %>");
+      var msUntil   = nextDue - serverNow;
+      var MAX_WAIT_MS = 10 * 60 * 1000; // 10 minutes
+      if (msUntil > 0 && msUntil <= MAX_WAIT_MS) {
+        setTimeout(function () { window.location.reload(); }, msUntil + 300);
+      }
+    })();
+  </script>
 <% end %>

@@ -4,8 +4,11 @@ class Subject < ApplicationRecord
   # due to ancestry, a subject can't be deleted until underlying children are:
   has_ancestry orphan_strategy: :restrict
 
+  # Acts live under a subject and so can't delete if there are still acts
+  has_many :acts, dependent: :restrict_with_error
+
   # a subject can have many card_templates and cannot be deleted until card_templates are
-  has_many :card_templates, dependent: :restrict_with_error
+  has_many :card_templates, dependent: :destroy
 
   # must have a name, which must be unique within a user and a ancestry hierarchy
   validates :name, presence: true,
@@ -16,6 +19,7 @@ class Subject < ApplicationRecord
 
   # arrange subjects in alphabetical order
   scope :alphabetical, -> { order(:name) }
+
   def self.tree_for(user)
     user.subjects.arrange
   end

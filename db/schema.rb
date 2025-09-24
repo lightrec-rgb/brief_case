@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_09_24_062536) do
+ActiveRecord::Schema[8.0].define(version: 2025_09_24_075603) do
   create_table "acts", force: :cascade do |t|
     t.integer "user_id", null: false
     t.integer "subject_id", null: false
@@ -81,6 +81,12 @@ ActiveRecord::Schema[8.0].define(version: 2025_09_24_062536) do
     t.datetime "updated_at", null: false
     t.text "question"
     t.text "answer"
+    t.json "fsrs_card", default: {}, null: false
+    t.datetime "due_at"
+    t.datetime "last_review_at"
+    t.integer "reps", default: 0, null: false
+    t.integer "lapses", default: 0, null: false
+    t.index ["due_at"], name: "index_session_items_on_due_at"
     t.index ["item_type", "item_id"], name: "index_session_items_on_item_type_and_item_id"
     t.index ["session_id", "position"], name: "index_session_items_on_session_id_and_position", unique: true
     t.index ["session_id"], name: "index_session_items_on_session_id"

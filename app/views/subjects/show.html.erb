@@ -4,37 +4,135 @@
   <%= link_to "← Back to Subjects", subjects_path, class: "underline" %>
 </p>
 
-<% if @entries.any? %>
-  <table class="w-full text-sm border-collapse">
-    <thead>
-      <tr class="text-left border-b">
-        <th class="px-3 py-2">Case name</th>
-        <th class="px-3 py-2">Citation</th>
-        <th class="px-3 py-2">Belongs to</th>
-        <th class="px-3 py-2">Actions</th>
-      </tr>
-    </thead>
-    <tbody>
-      <% @entries.each do |entry| %>
-        <% c = entry.case_detail %>
-        <% s = entry.subject %>
-        <tr class="border-b">
-          <td class="px-3 py-2"><%= c&.case_name || "(untitled)" %></td>
-          <td class="px-3 py-2"><%= c&.full_citation %></td>
-          <td class="px-3 py-2">
-            <%# Show full breadcrumb; if it's the current subject, you can dim it %>
-            <%= link_to subject_breadcrumb(s),
-                        subject_path(s),
-                        class: (s.id == @subject.id ? "text-gray-500" : "underline") %>
-          </td>
-          <td class="px-3 py-2">
-            <%= link_to "Open", entry_path(entry), class: "underline" %> ·
-            <%= link_to "Edit", edit_entry_path(entry), class: "underline" %>
-          </td>
+<%# --- Partition entries into cases and provisions --- %>
+<% cases      = @entries.select { |e| e.kind == "Case" } %>
+<% provisions = @entries.select { |e| e.kind == "Provision" } %>
+<% grouped    = provisions.group_by { |e| e.provision_detail&.act || :__unlinked } %>
+
+<!-- CASES SECTION -->
+<section class="mt-6">
+  <h2 class="text-lg font-semibold mb-2">Cases in this subject</h2>
+
+  <% if cases.none? %>
+    <p class="text-gray-600">No cases yet.</p>
+  <% else %>
+    <table class="w-full text-sm border-collapse">
+      <thead>
+        <tr class="text-left border-b">
+          <th class="px-3 py-2 w-1/3">Case name</th>
+          <th class="px-3 py-2 w-1/3">Citation</th>
+          <th class="px-3 py-2 w-1/3">Belongs to</th>
+          <th class="px-3 py-2 text-center">Actions</th>
         </tr>
+      </thead>
+      <tbody>
+        <% cases.each do |entry| %>
+          <% c = entry.case_detail %>
+          <% s = entry.subject %>
+          <tr class="border-b">
+            <td class="px-3 py-2"><%= c&.case_name.presence || "(untitled)" %></td>
+            <td class="px-3 py-2"><%= c&.full_citation.presence || "—" %></td>
+            <td class="px-3 py-2">
+              <%= link_to subject_breadcrumb(s),
+                          subject_path(s),
+                          class: (s.id == @subject.id ? "text-gray-500" : "underline") %>
+            </td>
+            <td class="px-3 py-2">
+              <div class="flex justify-center items-center gap-2 whitespace-nowrap">
+                <%= link_to "Open", entry_path(entry), class: "underline" %>
+                <%= link_to "Edit", edit_entry_path(entry), class: "underline" %>
+                <%# No Delete for cases on Subject show (kept simpler here) %>
+              </div>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  <% end %>
+</section>
+
+<!-- ACTS SECTION -->
+<section class="mt-10">
+  <h2 class="text-lg font-semibold mb-2">Acts in this subject</h2>
+
+  <% if @acts.blank? %>
+    <p class="text-gray-600">No Acts yet.</p>
+  <% else %>
+    <table class="w-full text-sm border-collapse">
+      <thead>
+        <tr class="text-left border-b">
+          <th class="px-3 py-2 w-1/2">Act</th>
+          <th class="px-3 py-2 w-1/6">Provisions</th>
+          <th class="px-3 py-2 w-1/6">Updated</th>
+          <th class="px-3 py-2 text-center">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @acts.each do |act| %>
+          <tr class="border-b">
+            <td class="px-3 py-2"><%= act.display_name %></td>
+            <td class="px-3 py-2"><%= act.provisions.size %></td>
+            <td class="px-3 py-2 text-gray-500 whitespace-nowrap"><%= l(act.updated_at, format: :short) %></td>
+            <td class="px-3 py-2">
+              <div class="flex justify-center items-center gap-2 whitespace-nowrap">
+                <%= link_to "Add Provision", new_act_provision_path(act), class: "underline" %>
+                <%= link_to "Edit", edit_act_path(act), class: "underline" %>
+                <%# No Delete Act here %>
+              </div>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  <% end %>
+</section>
+
+<!-- PROVISIONS SECTION -->
+<section class="mt-10">
+  <h2 class="text-lg font-semibold mb-2">Provisions by Act</h2>
+
+  <% if provisions.none? %>
+    <p class="text-gray-600">No provisions yet.</p>
+  <% else %>
+    <% grouped.each do |act_or_key, entries_for_act| %>
+      <% if act_or_key == :__unlinked %>
+        <h3 class="text-md font-semibold mt-6 mb-2">Unlinked provisions</h3>
+      <% else %>
+        <h3 class="text-md font-semibold mt-6 mb-2"><%= act_or_key.display_name %></h3>
       <% end %>
-    </tbody>
-  </table>
-<% else %>
-  <p class="text-gray-600">No case info in this subject yet.</p>
-<% end %>
+
+      <table class="w-full text-sm border-collapse mb-4">
+        <thead>
+          <tr class="text-left border-b">
+            <th class="px-3 py-2 w-1/2">Provision ref</th>
+            <th class="px-3 py-2 w-1/6">Updated</th>
+            <th class="px-3 py-2 text-center w-1/6">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% entries_for_act.each do |entry| %>
+            <% p = entry.provision_detail %>
+            <tr class="border-b">
+              <td class="px-3 py-2 whitespace-nowrap">
+                <%= link_to(p&.provision_ref.presence || "—",
+                            entry_path(entry),
+                            class: "underline") %>
+              </td>
+              <td class="px-3 py-2 text-gray-500 whitespace-nowrap"><%= l(entry.updated_at, format: :short) %></td>
+              <td class="px-3 py-2">
+                <div class="flex justify-center items-center gap-2 whitespace-nowrap">
+                  <% if p&.act %>
+                    <%= link_to "Edit", edit_act_provision_path(p.act, p), class: "underline" %>
+                    <%# No Delete provision here %>
+                  <% else %>
+                    <span class="text-gray-400">No Act</span>
+                  <% end %>
+                </div>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    <% end %>
+  <% end %>
+</section>

@@ -3,6 +3,7 @@ class Provision < ApplicationRecord
   belongs_to :act, optional: true
 
   validates :provision_ref, presence: true
+  validates :provision_text, presence: true
   validates :act, presence: true, on: :create
 
   # When creating under an Act, copy the Act header into the provision fields

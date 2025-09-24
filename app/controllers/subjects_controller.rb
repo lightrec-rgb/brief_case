@@ -18,24 +18,28 @@ class SubjectsController < ApplicationController
 
   # build a hierarchial tree using ancestry gem, sorting by name
   def show
-  subtree_ids = @subject.subtree_ids
-  @entries = CardTemplate
-               .owned_by(current_user)
-               .where(subject_id: subtree_ids)
-               .left_joins(:case_detail, :provision_detail)
-               .includes(:subject, :case_detail, :provision_detail)
-               .where("cases.id IS NOT NULL OR provisions.id IS NOT NULL")
-               .reorder(Arel.sql(<<~SQL.squish))
-                 CASE card_templates.kind
-                   WHEN 'Case' THEN LOWER(COALESCE(cases.case_short_name, cases.case_name, card_templates.name, ''))
-                   WHEN 'Provision' THEN LOWER(COALESCE(provisions.act_short_name, provisions.act_name, card_templates.name, ''))
-                   ELSE LOWER(COALESCE(card_templates.name, ''))
-                 END ASC
+    subtree_ids = @subject.subtree_ids
+
+    # Load acts in the whole subtree (so the “Acts” and “Provisions by Act” sections work)
+    @acts = Act
+              .where(subject_id: subtree_ids)
+              .includes(:provisions)                # avoids N+1 when counting/listing
+              .order(Arel.sql("LOWER(COALESCE(act_short_name, act_name)) ASC"))
+
+    # Load entries (CardTemplates) that actually have a case or a provision
+    @entries = CardTemplate
+                .owned_by(current_user)
+                .where(subject_id: subtree_ids)
+                .left_joins(:case_detail, :provision_detail)
+                .includes(:subject, :case_detail, :provision_detail)
+                .where("cases.id IS NOT NULL OR provisions.id IS NOT NULL")
+                .reorder(Arel.sql(<<~SQL.squish))
+                  CASE card_templates.kind
+                    WHEN 'Case' THEN LOWER(COALESCE(cases.case_short_name, cases.case_name, card_templates.name, ''))
+                    WHEN 'Provision' THEN LOWER(COALESCE(provisions.act_short_name, provisions.act_name, card_templates.name, ''))
+                    ELSE LOWER(COALESCE(card_templates.name, ''))
+                  END ASC
                SQL
-  end
-  # build a unsaved subject when a user access the new form (GET)
-  def new
-    @subject = current_user.subjects.new
   end
 
   # save a subject when submitting the new form (POST)
@@ -64,21 +68,47 @@ class SubjectsController < ApplicationController
  def destroy
   @subject = current_user.subjects.find(params[:id])
 
-  # Guard 1: cannot delete if it has sub-subjects
+  # Guard 1: cannot delete if it has sub-topics
   if @subject.children.exists?
     return redirect_to subjects_path,
-      alert: "Cannot delete this subject while it has sub-topics. Move or delete them first.",
+      alert: "Cannot delete this subject while it has sub-topics. Move or delete them first",
       status: :see_other
   end
 
-  # Guard 2: cannot delete if it still has cases/templates
-  if @subject.card_templates.exists?
+  # Consider the whole subtree so you don’t leave grandchildren behind.
+  subtree_ids = @subject.subtree_ids
+
+  # Guard 2: any Acts still in this subject (or descendants)?
+  if Act.where(subject_id: subtree_ids).exists?
     return redirect_to subjects_path,
-      alert: "Cannot delete this subject while it has cases. Move or delete those cases first.",
+      alert: "Cannot delete this subject while it has Acts. Delete or move those Acts first",
       status: :see_other
   end
 
-  # Safe to delete
+  # Guard 3: any real entries (Case/Provision) still present?
+  entries_exist = CardTemplate
+                    .where(subject_id: subtree_ids)
+                    .left_joins(:case_detail, :provision_detail)
+                    .where("cases.id IS NOT NULL OR provisions.id IS NOT NULL")
+                    .exists?
+
+  if entries_exist
+    return redirect_to subjects_path,
+      alert: "Cannot delete this subject while it has Cases or Provisions. Delete or move those entries first",
+      status: :see_other
+  end
+  # Guard 4: any SessionItems referencing templates in this subject (or descendants)?
+  session_items_exist = SessionItem
+    .where(item_type: "CardTemplate", item_id: CardTemplate.where(subject_id: subtree_ids).select(:id))
+    .exists?
+
+  if session_items_exist
+    return redirect_to subjects_path,
+      alert: "Cannot delete this subject: one or more Sessions still use its entries. Delete those Sessions first",
+      status: :see_other
+  end
+
+  # Safe to delete. (Empty CardTemplate shells will be auto-removed by before_destroy)
   if @subject.destroy
     redirect_to subjects_path, notice: "Subject deleted", status: :see_other
   else

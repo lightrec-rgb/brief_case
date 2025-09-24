@@ -57,7 +57,7 @@ class CardTemplatesController < ApplicationController
     @entry   = CardTemplate.new(card_params.merge(user: current_user))
 
     if @entry.save
-      redirect_to entry_path(@entry), notice: "Saved", status: :see_other
+      redirect_to entries_path(subject_id: @entry.subject_id), notice: "Entry created", status: :see_other
     else
       build_detail_for(@entry)
       @card = @entry
@@ -79,7 +79,7 @@ class CardTemplatesController < ApplicationController
   # updates the template
   def update
     if @card.update(card_params)
-      redirect_to entry_path(@card), notice: "Updated", status: :see_other
+      redirect_to entries_path(subject_id: @card.subject_id), notice: "Entry updated", status: :see_other
     else
       build_detail_for(@card)
       render :edit, status: :unprocessable_entity

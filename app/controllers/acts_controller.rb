@@ -1,6 +1,6 @@
 class ActsController < ApplicationController
   before_action :authenticate_user!
-  before_action :set_act, only: [ :show, :edit, :update ]
+  before_action :set_act, only: [ :show, :edit, :update, :destroy ]
 
   def new
     # Preselect the subject from the Entries page link: new_act_path(subject_id: @subject.id)
@@ -33,6 +33,19 @@ class ActsController < ApplicationController
                   notice: "Act updated"
     else
       render :edit, status: :unprocessable_entity
+    end
+  end
+
+  def destroy
+    subject_id = @act.subject_id
+    if @act.destroy
+      redirect_to entries_path(subject_id: subject_id),
+                  status: :see_other,
+                  notice: "Act deleted"
+    else
+      # Act has provisions; show a friendly message and keep them on Entries
+      redirect_to entries_path(subject_id: subject_id, anchor: "act-#{@act.id}"),
+                  alert: "You must delete this Act’s provisions before deleting the Act"
     end
   end
 
