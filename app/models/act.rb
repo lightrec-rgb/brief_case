@@ -13,7 +13,7 @@ class Act < ApplicationRecord
   # Second preference to use the act's full name
   def display_name
     if act_short_name.present?
-      [act_short_name, year, jurisdiction].compact.join(" ")
+      [ act_short_name, year, jurisdiction ].compact.join(" ")
     else
       act_name
     end
