@@ -1,9 +1,15 @@
 class CaseCard
+  # === Generate a Question / Answer pair for a case ===
+
+  # Constructor to store passed in card for later use
   def initialize(card)
     @card = card
   end
 
-  # prepare the question and answer for session_item
+  # Method that returns a question and an answer
+  # Fetch the associated case record
+  # Build an array of possible strings (case name, short name, full citation)
+  # For each item in the array, loop through each possible question
   def build_pair
     our_case = @card.case_detail
     return { question: nil, answer: nil } unless our_case
@@ -24,6 +30,7 @@ class CaseCard
       ]
     end
 
+    # Pick a random question and answer and return them
     q, a = candidates.sample
     { question: q, answer: a }
   end

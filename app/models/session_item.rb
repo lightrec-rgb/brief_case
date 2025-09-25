@@ -1,21 +1,34 @@
 class SessionItem < ApplicationRecord
   belongs_to :session, class_name: "Session", inverse_of: :session_items
+
+  # Polymorphic association - each session_item can point to different models
+  # Currently card_template
   belongs_to :item, polymorphic: true
 
+  # Lifecycle states of a session_item (actual card)
   STATES = {
     pending: "pending",
     seen:    "seen",
     done:    "done"
   }.freeze
-  enum :state, STATES, default: :pending
 
+  # Enum for states / lifecycle states
+  # Ensures state is present and valid
+  enum :state, STATES, default: :pending
   validates :state, presence: true, inclusion: { in: STATES.keys.map(&:to_s) }
 
+  # Add shortcut method to forward to an item
   delegate :user, :subject, to: :item, allow_nil: true
 
+  # After a session is created, initialise FSRS fields
   after_create :init_fsrs_card!
 
-  # Build the front/back content from the underlying CardTemplate.
+  # === Prompt Building (content for front and back of cards) ===
+
+  # Method to create the question / answer text for the item
+  # Only runs when an item is a card_template and is blank
+  # Ask card_template (wrapped as a card) to create q&a pair
+  # Save the q&a to the db and return self to call another method on item
   def build_prompt!
     return self unless question.blank? && answer.blank?
     return self unless item.is_a?(CardTemplate)
@@ -28,7 +41,13 @@ class SessionItem < ApplicationRecord
   end
 
   # === FSRS review flow ===
-  # rating: 1=Again, 2=Hard, 3=Good, 4=Easy
+  # Code taken and adapted from FSRS
+  # (https://github.com/open-spaced-repetition/rb-fsrs/blob/master/lib/fsrs/fsrs.rb)
+
+  # Rate the card using FSRS and schedule the next review
+  # Read time now, read existing FSRS data, build an FSRS card and create the scheduler
+  # Identify the plan that matches a user's rating
+  # Save the plan to the db
   def review!(rating)
     now = Time.current.utc
 
@@ -36,7 +55,7 @@ class SessionItem < ApplicationRecord
     card      = card_hash.present? ? Fsrs::Card.from_h(card_hash) : Fsrs::Card.new
     scheduler = Fsrs::Scheduler.new
 
-    logs = scheduler.repeat(card, now) # => {1=>SchedulingInfo, 2=>..., 3=>..., 4=>...}
+    logs = scheduler.repeat(card, now)
     info = logs[rating.to_i] || logs[Fsrs::Rating::GOOD]
     new_card = info.card
 
@@ -53,14 +72,16 @@ class SessionItem < ApplicationRecord
     )
   end
 
-  # Preview the next due time for each rating without saving.
-  # Returns { 1=>{due_at: Time, scheduled_days: Integer}, 2=>..., 3=>..., 4=>... }
+  # Preview the next due time for each rating without saving
+  # Load / Create the FSRS card and run FSRS to get schedules for each rating
+  # Return predicted due_at and scheduled_days
+  # If it fails, return a fallback so UI still shows something
   def preview_options(now: Time.current.utc)
     data = ensure_hash(fsrs_card)
     base_card = data.present? ? Fsrs::Card.from_h(data) : Fsrs::Card.new
 
     scheduler = Fsrs::Scheduler.new
-    logs = scheduler.repeat(base_card, now.utc) # rating => Fsrs::SchedulingInfo
+    logs = scheduler.repeat(base_card, now.utc)
 
     logs.transform_values do |sched|
       c = sched.card
@@ -68,7 +89,6 @@ class SessionItem < ApplicationRecord
     end
   rescue => e
     Rails.logger.warn("[FSRS preview_options] #{e.class}: #{e.message}")
-    # Fallback so UI never shows '—'
     {
       1 => { due_at: 5.minutes.from_now,  scheduled_days: 0 },
       2 => { due_at: 10.minutes.from_now, scheduled_days: 0 },
@@ -77,7 +97,42 @@ class SessionItem < ApplicationRecord
     }
   end
 
-  # Used by Session#reset!
+  # Read FSRS state as an integer (whether fsrs_card is a Hash or JSON String)
+  def fsrs_state_i
+    data =
+      case fsrs_card
+      when Hash   then fsrs_card
+      when String then (JSON.parse(fsrs_card) rescue {})
+      else {}
+      end
+
+    (data["state"] || data[:state]).to_i
+  end
+
+  # === Legacy session states ===
+
+  # Mark an item as seen (unless done)
+  # Note - legacy, replaced by FSRS
+  def mark_seen!
+    return if done?
+    update!(state: :seen, started_at: (started_at || Time.current))
+  end
+
+  # Mark and item as done, whether answer was correct and timestamp completion
+  # Note - legacy, replaced by FSRS
+  def mark_done!(correct: nil)
+    update!(
+      state: "done",
+      correct: correct,
+      completed_at: Time.current,
+      started_at: (started_at || Time.current)
+    )
+  end
+
+  # === Reset and Initialisation ===
+
+  # Reset an item's FSRS state to New (and due now)
+  # Clear metrics and lifecycle fields so the card can be studied from scratch
   def reset_fsrs!
     c = Fsrs::Card.new
     c.due = Time.current.utc.to_datetime
@@ -94,24 +149,9 @@ class SessionItem < ApplicationRecord
     )
   end
 
-  # Legacy helpers
-  def mark_seen!
-    return if done?
-    update!(state: :seen, started_at: (started_at || Time.current))
-  end
-
-  def mark_done!(correct: nil)
-    update!(
-      state: "done",
-      correct: correct,
-      completed_at: Time.current,
-      started_at: (started_at || Time.current)
-    )
-  end
-
   private
 
-  # Parse fsrs_card into a Hash (supports Hash or JSON String).
+  # Turn fsrs_card into a Hash (supports Hash or JSON String).
   def ensure_hash(value)
     h =
       case value
@@ -122,6 +162,7 @@ class SessionItem < ApplicationRecord
     h.deep_symbolize_keys
   end
 
+  # Make all date/time format a time object.
   def to_time(dt_like)
     case dt_like
     when Time     then dt_like
@@ -131,6 +172,8 @@ class SessionItem < ApplicationRecord
     end
   end
 
+  # Initialises the FSRS state for a session_item
+  # Sets default paramaters and persists initial state to the db
   def init_fsrs_card!
     return if fsrs_card.present?
 

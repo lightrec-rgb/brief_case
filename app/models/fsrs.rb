@@ -226,7 +226,7 @@ module Fsrs
     end
 
     def deep_clone
-      Marshal.load(Marshal.dump(self))
+      self.class.from_h(self.to_h)
     end
 
     def to_h
@@ -288,10 +288,6 @@ module Fsrs
       card_scheduler.record_log(card, now)
     end
 
-    def card_elapsed_days(card, now)
-      card.state == State::NEW ? 0 : (now - card.last_review).to_i
-    end
-
     def schedule_card(card_scheduler, card, now)
       case card.state
       when State::NEW
@@ -302,6 +298,27 @@ module Fsrs
         schedule_review_state(card_scheduler, card, now)
       end
     end
+
+# Make elapsed-days robust (last_review might be String/DateTime/Time)
+def card_elapsed_days(card, now)
+  return 0 if card.state == State::NEW || card.last_review.nil?
+
+  last =
+    case card.last_review
+    when Time      then card.last_review
+    when DateTime  then card.last_review.to_time
+    when String
+      begin
+        Time.iso8601(card.last_review)
+      rescue
+        Time.parse(card.last_review) rescue now
+      end
+    else
+      now
+    end
+
+  ((now - last) / 86_400.0).floor
+end
 
     module NewState # rubocop:disable Style/Documentation
       def schedule_new_state(s, now)

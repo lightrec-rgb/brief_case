@@ -1,9 +1,15 @@
 class ProvisionCard
+  # === Generate a Question / Answer pair for a provision ===
+
+  # Constructor to store passed in card for later use
   def initialize(card)
     @card = card
   end
 
-  # prepare the question and answer for session_item
+  # Method that returns a question and an answer
+  # Fetch the associated provision record
+  # Build an array of possible strings (short name, name)
+  # For each item in the array, loop through each possible question
   def build_pair
     prov = @card.provision_detail
     return { question: nil, answer: nil } unless prov
@@ -22,6 +28,7 @@ class ProvisionCard
       ]
     end
 
+    # Pick a random question and answer and return them
     q, a = candidates.sample
     { question: q, answer: a }
   end

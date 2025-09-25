@@ -2,33 +2,41 @@ class Session < ApplicationRecord
   belongs_to :user
   belongs_to :subject
 
-  # there will be many session_items to every session, ordered by position.
-  # they will be deleted if the session is deleted
+  # A one-to-many relationship (one session, many session_items)
+  # Oredered by position
+  # Session_items deleted if the session is deleted
   has_many :session_items,
          -> { order(:position) },
          dependent: :destroy,
          class_name: "SessionItem",
          inverse_of: :session
 
+  # Lifecycle stages of a session
   STATUSES = {
   draft:       "draft",
   in_progress: "in_progress",
   paused:      "paused",
-  completed:   "completed" # kept for compatibility
+  completed:   "completed"
   }.freeze
 
+  # Enum for status / lifecycle stages
+  # Ensures status is present and valid
   enum :status, STATUSES, default: :draft
   validates :status, presence: true, inclusion: { in: STATUSES.keys.map(&:to_s) }
 
+  #
   before_validation :default_status, on: :create
-  # a status allows the user to create a session but not start it, to start it,
-  # to stop at some point and to continue, and to complete it
 
+  # Returns sessions for that user, that subject and ordered by recent
   scope :owned_by,    ->(user)    { where(user:) }
   scope :for_subject, ->(subject) { where(subject:) }
   scope :recent,      ->          { order(created_at: :desc) }
 
-  # create stages for a session so a user can leave and return to a session
+
+  # === Lifecycle / Session progress ===
+
+  # Begin a study session in db, set to in_progress
+  # If current position is not set, find the first 'not done' item and set it
   def start!
     transaction do
       update!(
@@ -44,123 +52,50 @@ class Session < ApplicationRecord
     end
   end
 
+  # Pause the session and time-stamp the pause
+  # Note - now largely redundant with FSRS implementation
   def pause!
     update!(status: "paused", paused_at: Time.current)
   end
 
+  # Resume a session
   def resume!
     update!(status: "in_progress", paused_at: nil)
   end
 
-  # create the option for a user to reset the cards so they can start again
+  # Clear progress on a session and set it back to draft status
+  # Reset each session_item's FSRS state and progress
   def reset!
     transaction do
-      # Reset each item's FSRS state and progress
       session_items.find_each(&:reset_fsrs!)
 
-      # Recompute counters
       self.done_count  = 0
       self.total_count = session_items.count
-      self.current_pos = 1
-      self.status      = "in_progress"
-      self.started_at  = (started_at || Time.current)
+      self.current_pos = nil
+      self.status      = "draft"
+      self.started_at  = nil
       self.paused_at   = nil
       self.completed_at = nil
       save!
     end
   end
 
-  # Next item that is due now (or nil if none)
-  def current_item
-    return nil if total_count.to_i <= 0
-
-    session_items
-      .where("due_at IS NULL OR due_at <= ?", Time.current.utc)
-      .order(Arel.sql("COALESCE(due_at, '1970-01-01') ASC"))
-      .first
+  # Mark a session as finished (now outside the FSRS process)
+  def complete!
+    update!(status: "completed", completed_at: Time.current, paused_at: nil)
   end
 
-  # Kept for compatibility; FSRS flow doesn’t use positional "next"
-  def next_item
-    session_items
-      .where("due_at IS NULL OR due_at <= ?", Time.current.utc)
-      .where("position > ?", (current_pos || 0))
-      .order(:position)
-      .first
-  end
+  # === Deck building ===
 
-  def prepare_current_item!
-    i = current_item
-    return unless i
-
-    if i.state == "pending"
-      i.build_prompt! if i.respond_to?(:build_prompt!) && i.question.blank?
-      i.started_at ||= Time.current
-      i.save!
-    end
-    i
-  end
-
-  # counts for user feedback
-  def new_count
-  session_items
-    .where("fsrs_card ->> 'state' = ?", Fsrs::State::NEW.to_s)
-    .count
-  end
-
-  def due_count
-    session_items
-      .where("due_at IS NULL OR due_at <= ?", Time.current.utc)
-      .count
-  end
-
-  def review_count
-    session_items.to_a.count { |si|
-      si.fsrs_card.present? &&
-        si.fsrs_card["state"].to_i == Fsrs::State::REVIEW
-    }
-  end
-
-  # New FSRS path: rate the current card (1: Again, 2: Hard, 3: Good, 4: Easy)
-  # Session does not "complete"—it stays in_progress; items schedule themselves.
-  def advance_with_rating!(rating)
-    transaction do
-      item = current_item
-      return self unless item
-
-      item.review!(rating) # schedules next due_at, updates reps/lapses
-
-      # For list/progress UI: "done" = not due now
-      self.done_count = session_items.where("due_at > ?", Time.current.utc).count
-      self.status     = "in_progress"
-      save!
-    end
-  end
-
-  # Backwards compatibility: map correct/incorrect to FSRS ratings
-  # correct: true  -> GOOD (3)
-  # correct: false -> AGAIN (1)
-  # correct: nil   -> GOOD (3) as a safe default
-  def advance!(correct: nil)
-    rating =
-      case correct
-      when true  then 3
-      when false then 1
-      else 3
-      end
-    advance_with_rating!(rating)
-  end
-
-
-  # -- Deck building ---------------------------------------------------------
-
-  # Build a deck, assign positions, initialise counters.
-  # (FSRS state initialises in SessionItem after_create)
+  # Initialise a session, ensruing the it has items and the session record exists
+  # Shuffles the items
+  # Clears existing items and creates a session item for each object
+  # Assigns a position, sets state as pending and pre-builds the prompt for each session_item
+  # Updates sesssion data
   def build_from_items!(items:, shuffled: true, name: nil)
     raise ArgumentError, "There are no entries for this subject" if items.blank?
 
     transaction do
-      # ensure the parent exists
       if new_record?
         self.status ||= "draft"
         save!
@@ -184,7 +119,7 @@ class Session < ApplicationRecord
         shuffled:     shuffled,
         total_count:  ordered.size,
         done_count:   0,
-        current_pos:  ordered.size.positive? ? 1 : nil, # harmless with FSRS
+        current_pos:  ordered.size.positive? ? 1 : nil,
         status:       "draft",
         started_at:   nil,
         paused_at:    nil,
@@ -195,8 +130,94 @@ class Session < ApplicationRecord
     self
   end
 
+  # === Item selection ===
+
+  # Determines the item to study now (for non-complete status)
+  # Due now if never studied and not scheduled in the future
+  # Ordered so the oldest appears first
+  def current_item
+    return nil if total_count.to_i <= 0
+    return nil if status == "completed"
+
+    session_items
+      .where("due_at IS NULL OR due_at <= ?", Time.current.utc)
+      .order(Arel.sql("COALESCE(due_at, '1970-01-01') ASC"))
+      .first
+  end
+
+  # Identify the next item to study
+  # Note - redundant with FSRS implementation
+  def next_item
+    session_items
+      .where("due_at IS NULL OR due_at <= ?", Time.current.utc)
+      .where("position > ?", (current_pos || 0))
+      .order(:position)
+      .first
+  end
+
+  # Gets the current item
+  def prepare_current_item!
+    return nil if status == "completed"
+    i = current_item
+    return unless i
+
+    if i.state == "pending"
+      i.build_prompt! if i.respond_to?(:build_prompt!) && i.question.blank?
+      i.started_at ||= Time.current
+      i.save!
+    end
+    i
+  end
+
+  # === FSRS Integration ===
+  # Code taken and adapted from FSRS
+  # (https://github.com/open-spaced-repetition/rb-fsrs/blob/master/lib/fsrs/fsrs.rb)
+
+  # Hadles a user's rating for the current card (Again / Hard / Good / Easy)
+  # Applies logic from FSRS on the current item, including due_at and repititions
+  # Recounts items not due (done)
+  def advance_with_rating!(rating)
+    return self if status == "completed"
+    transaction do
+      item = current_item
+      return self unless item
+
+      item.review!(rating)
+
+      self.done_count = session_items.where("due_at > ?", Time.current.utc).count
+      self.status     = "in_progress"
+      save!
+    end
+  end
+
+  # === Progress metrics ===
+
+  # Counts all the items in "New" FSRS state
+  def new_count
+    session_items.to_a.count { |si|
+      si.fsrs_card.present? && si.fsrs_card["state"].to_i == Fsrs::State::NEW
+    }
+  end
+
+  # Counts all the items in "Due Now" FSRS state, excluding New cards
+  def due_count
+    now = Time.current.utc
+    session_items.to_a.count { |si|
+      (si.due_at.nil? || si.due_at <= now) &&
+        si.fsrs_state_i != Fsrs::State::NEW
+    }
+  end
+
+  # Counts all the items in "Review" FSRS state
+  def review_count
+    session_items.to_a.count { |si|
+      si.fsrs_card.present? && si.fsrs_card["state"].to_i == Fsrs::State::REVIEW
+    }
+  end
+
   private
 
+  # Set a default status on create
   def default_status
     self.status ||= "draft"
   end

@@ -20,11 +20,15 @@ Rails.application.routes.draw do
             as:   :entries,
             only: [ :index, :new, :create, :show, :edit, :update, :destroy ]
 
+  # Acts and provisions live at /entries
+  resources :acts, only: [ :index, :new, :create, :show, :edit, :update, :destroy ] do
+    resources :provisions, only: [ :new, :create, :edit, :update, :destroy ]
+  end
 
-  # study sessions
+  # study sessions live at /learn
   resources :sessions, path: "learn", controller: "sessions", only: [ :index, :new, :create, :show, :destroy ] do
   member do
-    post :start, :pause, :resume, :reset, :advance
+    post :start, :pause, :resume, :reset, :advance, :complete
   end
 end
 
@@ -34,12 +38,6 @@ end
       post :seen
       post :done
     end
-  end
-
-  # Acts and provisions
-  resources :acts, only: [ :index, :new, :create, :show, :edit, :update, :destroy ] do
-    # Provisions are created under an Act
-    resources :provisions, only: [ :new, :create, :edit, :update, :destroy ]
   end
 
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
