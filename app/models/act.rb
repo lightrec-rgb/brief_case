@@ -16,5 +16,6 @@ class Act < ApplicationRecord
       [act_short_name, year, jurisdiction].compact.join(" ")
     else
       act_name
+    end
   end
 end
