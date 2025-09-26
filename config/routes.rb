@@ -12,7 +12,7 @@ Rails.application.routes.draw do
   end
 
   # subjects live at /decks
-  resources :subjects, path: "decks", only: [:index, :new, :create, :edit, :update, :destroy]
+  resources :subjects, path: "decks", only: [ :index, :new, :create, :edit, :update, :destroy ]
 
   # cases live at /entries
   resources :card_templates,

@@ -1,6 +1,6 @@
 class SessionsController < ApplicationController
   before_action :authenticate_user!
-  
+
   # Load the sessions belonging to the current user
   before_action :set_session, only: [ :show, :start, :pause, :resume, :reset, :advance, :destroy, :complete, :reopen ]
 
@@ -93,7 +93,7 @@ class SessionsController < ApplicationController
 end
 
   # === Read ===
-  # Show two lists - active (not completed), and archived (completed) 
+  # Show two lists - active (not completed), and archived (completed)
   def index
     @active_sessions   = current_user.sessions.where.not(status: :completed).order(created_at: :desc).limit(20)
     @archived_sessions = current_user.sessions.where(status: :completed).order(updated_at: :desc).limit(20)
