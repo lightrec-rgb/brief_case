@@ -77,7 +77,7 @@
 <div class="mt-8 w-full">
   <h2 class="text-xl font-semibold mb-3">Recent sessions</h2>
 
-  <% recent = current_user.sessions.order(updated_at: :desc).limit(10) %>
+  <% recent = current_user.sessions.where.not(status: :completed).order(updated_at: :desc).limit(10) %>
   <% most_recent = recent.first %>
   <% others = recent.drop(1) %>
 

@@ -1,8 +1,15 @@
 class ProvisionsController < ApplicationController
   before_action :authenticate_user!
+
+  # Load the parent Act of a provision first
   before_action :set_act
+
+  # Load the provision for the current user for these actions for the Act
   before_action :set_provision, only: [ :edit, :update, :destroy ]
 
+  # === Create ===
+  # Build a new card_template of kind provision to th same subject as the Act
+  # Prebuild the provision detail object so the form has fields, seeded with the Act's info
   def new
     @entry = current_user.card_templates.new(subject: @act.subject, kind: "Provision")
     @entry.build_provision_detail(
@@ -14,6 +21,9 @@ class ProvisionsController < ApplicationController
     )
   end
 
+  # Build a new card_template of kind provision to th same subject as the Act
+  # Assign attributes to the card_template
+  # Save the provision and redirect to entries page or provide an error
   def create
     @entry = current_user.card_templates.new(subject: @act.subject, kind: "Provision")
     @entry.build_provision_detail unless @entry.provision_detail
@@ -33,11 +43,18 @@ class ProvisionsController < ApplicationController
     end
   end
 
+  # === Read ===
+  # Placeholder show action
+  def show; end
+
+  # === Update ===
+  # The entry is the template that owns the provision
   def edit
     @entry = @provision.card_template
     @entry.build_provision_detail unless @entry.provision_detail
   end
 
+  # Update card_template / provision detail, return to entries page or provide an error
   def update
     @entry = @provision.card_template
     if @entry.update(entry_params)
@@ -48,6 +65,8 @@ class ProvisionsController < ApplicationController
     end
   end
 
+  # === Destroy ===
+  # Deletes the provision and redirect back to subject list
   def destroy
     if @provision
       @provision.destroy
@@ -59,10 +78,13 @@ class ProvisionsController < ApplicationController
 
   private
 
+  # Load the parent Act by ID for the current user
   def set_act
     @act = current_user.acts.find(params[:act_id])
   end
 
+  # Find the provision by ID for the current user. If not found go back to entries with error
+  # Ensure the provision actually belongs to the loaded Act
   def set_provision
     @provision = Provision.find_by(id: params[:id])
 
@@ -78,6 +100,7 @@ class ProvisionsController < ApplicationController
     end
   end
 
+  # Ensure only provision fields can be assigned
   def entry_params
     params.require(:card_template).permit(
       :name,

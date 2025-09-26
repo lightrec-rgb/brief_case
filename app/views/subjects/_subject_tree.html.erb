@@ -28,7 +28,7 @@
                                    .count rescue 0) %>
       <span class="ml-1 text-xs text-gray-500">(<%= entry_count %>)</span>
 
-      <span class="text-gray-400 text-xs">
+      <span class="text-black text-xs">
         (<%= link_to "Show", subject_path(subject) %> ·
         <%= link_to "Edit", edit_subject_path(subject) %> ·
         <%= button_to "Delete",
@@ -40,7 +40,7 @@
                 onsubmit: "return confirm('Delete this subject? (Only works if it has no sub-subjects or entries.)')",
                 class: "inline"
               },
-              class: "underline text-red-600 bg-transparent p-0 border-0 cursor-pointer align-baseline" %>)
+              class: "text-black bg-transparent p-0 border-0 cursor-pointer align-baseline" %>)
       </span>
     </div>
 

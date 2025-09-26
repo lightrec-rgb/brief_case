@@ -1,19 +1,17 @@
 class CasesController < ApplicationController
   before_action :authenticate_user!
+
+  # Load the case for the current user for these actions
   before_action :set_case, only: [ :show, :edit, :update, :destroy ]
 
-  # get all cases for the current user
-  def index
-    @cases = Case.index_for(current_user)
-  end
-
-  # build a unsaved case when a user accesses the new form (GET)
+  # === Create ===
+  # Build an unsaved case when a user accesses the new form
   def new
     @case = Case.build_for(user: current_user, attrs: {})
     @subjects_for_select = current_user.subjects.order(:name).pluck(:name, :id)
   end
 
-  # save a case when submitting the new form (POST)
+  # Build a new case and save it it. Redirect to entries page or provide an error
   def create
     @case = Case.build_for(user: current_user, attrs: {})
     if @case.save_from(case_params)
@@ -24,15 +22,22 @@ class CasesController < ApplicationController
     end
   end
 
-  # show a case (GET)
+  # === Read ===
+  # Load a list of the current user's cases
+  def index
+    @cases = Case.index_for(current_user)
+  end
+
+  # Placeholder show action
   def show; end
 
-  # render edit form including subject dropdown (GET)
+  # === Update ===
+  # Render edit form including subject dropdown
   def edit
     @subjects_for_select = current_user.subjects.order(:name).pluck(:name, :id)
   end
 
-  # updates when the edit form is submitted or provide an error (PATCH/PUT)
+  # Updates when the edit form is submitted or provide an error
   def update
     if @case.update_from(case_params)
       redirect_to entry_path(@case.card_template), notice: "Case updated", status: :see_other
@@ -42,7 +47,8 @@ class CasesController < ApplicationController
     end
   end
 
-  # deletes the case or proivides error message
+  # === Destroy ===
+  # Deletes the case and redirect back to subject list
   def destroy
     subject_id = @case.card_template.subject_id
     @case.destroy
@@ -51,12 +57,12 @@ class CasesController < ApplicationController
 
   private
 
-  # find the case by ID for the current user
+  # Find the case by ID for the current user
   def set_case
     @case = Case.index_for(current_user).find(params[:id])
   end
 
-  # ensure only case fields can be mass-assigned
+  # Ensure only case fields can be assigned
   def case_params
     params.require(:case).permit(
       :subject_id, :full_citation, :case_name, :case_short_name,

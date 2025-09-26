@@ -1,71 +1,190 @@
 <h1 class="text-2xl font-semibold mb-4">Learn</h1>
 
-<div class="mb-4 flex gap-2">
+<div class="mb-4">
   <%= link_to "Start new session", new_session_path, class: "bg-brand-blue text-white px-3 py-2 rounded hover:bg-gold" %>
 </div>
 
 <% if @sessions.blank? %>
   <p class="text-gray-600">No sessions yet. Start one now.</p>
 <% else %>
-  <table class="w-full text-sm">
-    <thead>
-      <tr class="border-b">
-        <th class="py-2 pr-2">Name</th>
-        <th class="py-2 pr-2">Subject</th>
-        <th class="py-2 pr-2">Due now</th>
-        <th class="px-2 py-2">Cards</th>
-        <th class="py-2 pr-2">Status</th>
-        <th class="py-2 pr-2">Updated</th>
-        <th class="py-2 pr-2">Actions</th>
-      </tr>
-    </thead>
-    <tbody>
-      <% @sessions.each do |s| %>
-        <tr class="border-b">
-          <td class="py-2 pr-2"><%= s.name.presence || "Session ##{s.id}" %></td>
-          <td class="py-2 pr-2"><%= s.subject&.name %></td>
+  <% grouped = @sessions.group_by(&:subject) %>
 
-          <td class="py-2 pr-2">
-            <% new_cards    = s.new_count %>
-            <% review_cards = s.review_count %>
-            <% due_now      = s.due_count %>
+  <% grouped.each do |subject, sessions| %>
+    <div class="mt-8">
+      <h2 class="text-lg font-semibold mb-2">
+        <%= subject&.name.presence || "(No subject)" %>
+      </h2>
 
-            <div>
-              <strong><%= due_now %></strong>/<%= s.total_count %>
-            </div>
-            <div class="text-xs text-gray-500">
-              <%= new_cards %> new · <%= review_cards %> review
-            </div>
-          </td>
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="border-b">
+            <th class="py-2 pr-2 text-left">Name</th>
+            <th class="py-2 px-2 text-center">Total</th>
+            <th class="py-2 px-2 text-center">New</th>
+            <th class="py-2 px-2 text-center">Due</th>
+            <th class="py-2 px-2 text-left">Status</th>
+            <th class="py-2 px-2 text-left">Updated</th>
+            <th class="py-2 px-2 text-center">Actions</th>
+          </tr>
+        </thead>
 
-          <td class="px-2 py-2 leading-tight">
-            <% new_cards    = s.new_count %>
-            <% review_total = s.review_count %>
+        <tbody>
+          <% sessions.each do |s| %>
+            <% total      = s.total_count.to_i %>
+            <% new_cards  = s.new_count.to_i %>
+            <% due_now    = s.due_count.to_i %> <%# Due = any non-NEW due now %>
 
-            <div class="text-sm">
-              <span title="Cards never studied">New:</span> <%= new_cards %> ·
-              <span title="All review cards, even if not due today">Review:</span> <%= review_total %>
-            </div>
-          </td>
+            <tr class="border-b align-middle">
+              <td class="py-2 pr-2 align-middle">
+                <div class="font-medium"><%= s.name.presence || "Session ##{s.id}" %></div>
 
-          <td class="px-2 py-2"><%= session_status_badge(s) %></td>
-          <td class="py-2 pr-2 text-gray-500"><%= l(s.updated_at, format: :short) %></td>
-          <td class="py-2 pr-2">
-            <%= link_to "Open", session_path(s), class: "underline" %> ·
-            <%= button_to "Reset",
-                  reset_session_path(s),
-                  method: :post,
-                  form:  { data: { turbo_confirm: "Reset this session? Progress will be cleared." }, class: "inline" },
-                  class: "underline bg-transparent p-0 border-0 cursor-pointer align-baseline" %> ·
-            <%= button_to "Delete",
-                  session_path(s),
-                  method: :delete,
-                  data: { turbo_confirm: "Delete this session? You’ll lose its progress permanently." },
-                  form:  { onsubmit: "return confirm('Delete this session? You’ll lose its progress permanently.')", class: "inline" },
-                  class: "underline text-red-600 bg-transparent p-0 border-0 cursor-pointer align-baseline" %>
-          </td>
-        </tr>
-      <% end %>
-    </tbody>
-  </table>
+                <%# ---- Small subtitle line: only shows when none are due now ---- %>
+                <div class="text-xs text-gray-500 h-5">
+                  <% now = Time.current.utc %>
+                  <% next_due_any = s.session_items.to_a
+                                     .select { |si| si.due_at && si.due_at > now && si.fsrs_state_i != Fsrs::State::NEW }
+                                     .map(&:due_at).min %>
+                  <% if next_due_any.present? && due_now.zero? %>
+                    Next due:
+                    <span
+                      class="next-due-countdown"
+                      data-next-due="<%= next_due_any.utc.iso8601 %>"
+                      data-server-now="<%= Time.current.utc.iso8601 %>">
+                      <%= distance_of_time_in_words(Time.current, next_due_any, include_seconds: false) %>
+                    </span>
+                  <% end %>
+                </div>
+              </td>
+
+              <td class="py-2 px-2 text-center whitespace-nowrap align-middle">
+                <span class="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-700">
+                  <strong class="ml-1"><%= total %></strong>
+                </span>
+              </td>
+
+              <td class="py-2 px-2 text-center whitespace-nowrap align-middle">
+                <span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs"
+                      style="background: #e6f0ff; color: #0b57d0;">
+                  New <strong class="ml-1"><%= new_cards %></strong>
+                </span>
+              </td>
+
+              <td class="py-2 px-2 text-center whitespace-nowrap align-middle">
+                <span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs"
+                      style="background: #e9f7ef; color: #1e7e34;">
+                  Due <strong class="ml-1"><%= due_now %></strong>
+                </span>
+              </td>
+
+              <td class="py-2 px-2 align-middle"><%= session_status_badge(s) %></td>
+
+              <td class="py-2 px-2 text-gray-500 align-middle"><%= l(s.updated_at, format: :short) %></td>
+
+              <td class="py-2 px-2 text-center align-middle">
+                <div class="inline-flex items-center gap-2">
+                  <%= link_to "Open",
+                        session_path(s),
+                        class: "inline-block bg-brand-blue text-white px-2.5 py-1.5 rounded hover:bg-gold text-xs font-medium" %>
+
+                  <%= button_to "Reset",
+                        reset_session_path(s),
+                        method: :post,
+                        form:  {
+                          data: { turbo_confirm: "Reset this session? Progress will be cleared." },
+                          onsubmit: "return confirm('Reset this session? Progress will be cleared.');",
+                          class: "inline"
+                        },
+                        class: "underline bg-transparent p-0 border-0 cursor-pointer align-middle text-xs" %>
+
+                  <%= button_to "Complete",
+                        complete_session_path(s),
+                        method: :post,
+                        form:  {
+                          data: { turbo_confirm: "Mark this session as completed? It will stop surfacing due cards." },
+                          onsubmit: "return confirm('Mark this session as completed? It will stop surfacing due cards.');",
+                          class: "inline"
+                        },
+                        class: "underline text-black bg-transparent p-0 border-0 cursor-pointer align-middle text-xs" %>
+
+                  <%= button_to "Delete",
+                        session_path(s),
+                        method: :delete,
+                        form:  {
+                          data: { turbo_confirm: "Delete this session? You’ll lose its progress permanently." },
+                          onsubmit: "return confirm('Delete this session? You’ll lose its progress permanently.');",
+                          class: "inline"
+                        },
+                        class: "underline text-black bg-transparent p-0 border-0 cursor-pointer align-middle text-xs" %>
+                </div>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% end %>
 <% end %>
+
+<%# ---------- Live countdown + auto-refresh (place at very end of file) ---------- %>
+<script>
+(function () {
+  var els = document.querySelectorAll(".next-due-countdown");
+  if (!els.length) return;
+
+  // Use the first node to compute a stable skew (server time - client time)
+  var ref = els[0];
+  var serverNowStr = ref.getAttribute("data-server-now");
+  var skewMs = Date.parse(serverNowStr) - Date.now();
+
+  function fmt(ms) {
+    var s = Math.max(0, Math.floor(ms / 1000));
+    var h = Math.floor(s / 3600);
+    var m = Math.floor((s % 3600) / 60);
+    var sec = s % 60;
+    if (h > 0) return h + "h " + String(m).padStart(2, "0") + "m";
+    if (m > 0) return m + "m " + String(sec).padStart(2, "0") + "s";
+    return sec + "s";
+  }
+
+  function tick() {
+    var any = false;
+    els.forEach(function (el) {
+      var nextDueStr = el.getAttribute("data-next-due");
+      if (!nextDueStr) return;
+
+      any = true;
+      var nextDue = Date.parse(nextDueStr);
+      var nowAdj = Date.now() + skewMs;
+      var msLeft = nextDue - nowAdj;
+
+      if (msLeft <= 0) {
+        el.textContent = "now";
+        if (!document.hidden) setTimeout(function () { window.location.reload(); }, 300);
+      } else {
+        el.textContent = fmt(msLeft);
+      }
+    });
+
+    if (!any) clearInterval(interval);
+  }
+
+  // Start immediately, then every second
+  tick();
+  var interval = setInterval(tick, 1000);
+
+  // Be polite with CPU/battery
+  document.addEventListener("visibilitychange", function () {
+    if (document.hidden) {
+      clearInterval(interval);
+    } else {
+      tick();
+      interval = setInterval(tick, 1000);
+    }
+  });
+
+  // Turbo back/forward cache safety: stop timers before caching
+  document.addEventListener("turbo:before-cache", function () {
+    clearInterval(interval);
+  });
+})();
+</script>

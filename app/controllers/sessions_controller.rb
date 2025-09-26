@@ -1,7 +1,7 @@
 class SessionsController < ApplicationController
   before_action :authenticate_user!
   # load the sessions belonging to the current user
-  before_action :set_session, only: [ :show, :start, :pause, :resume, :reset, :advance, :destroy ]
+  before_action :set_session, only: [ :show, :start, :pause, :resume, :reset, :advance, :destroy, :complete ]
 
   # give the user a list of most recent sessions - limit is arbitrary for web view
   def index
@@ -71,7 +71,7 @@ class SessionsController < ApplicationController
 
   # Validate session created
   if @session.save
-      redirect_to @session, notice: "Session created"
+      redirect_to sessions_path, notice: "Session created", status: :see_other
   else
       flash.now[:alert] = "Could not create session"
       render :new, status: :unprocessable_entity
@@ -80,9 +80,13 @@ end
 
   # show a session
   def show
-    @session.start! if @session.draft?
     @item = @session.prepare_current_item!
     @options = @item&.preview_options || {}
+  end
+
+  def complete
+    @session.complete!
+    redirect_to sessions_path, notice: "Session marked as completed", status: :see_other
   end
 
   # mark a session in progress

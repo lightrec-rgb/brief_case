@@ -19,9 +19,18 @@
 <% if @subject.nil? %>
   <p class="text-gray-600">Create a subject first to add entries.</p>
 <% else %>
-  <% # Partition entries into cases and provisions %>
-  <% cases      = @entries.select { |e| e.kind == "Case" } %>
-  <% provisions = @entries.select { |e| e.kind == "Provision" } %>
+  <% # Partition entries into cases and provisions, then sort each %>
+  <% cases = @entries.select { |e| e.kind == "Case" }.sort_by do |e|
+      c = e.case_detail
+      # sort strictly by case_name (case-insensitive), with id as a stable tiebreaker
+      [c&.case_name.to_s.strip.downcase, e.id]
+    end %>
+
+  <% provisions = @entries.select { |e| e.kind == "Provision" }.sort_by do |e|
+      p = e.provision_detail
+      # sort by Act display_name, then provision_ref (both case-insensitive), with id as tiebreaker
+      [p&.act&.display_name.to_s.downcase, p&.provision_ref.to_s.downcase, e.id]
+    end %>
 
   <!-- CASES SECTION -->
   <section class="mt-6">
@@ -70,7 +79,7 @@
                           onsubmit: "return confirm('Delete this case?')",
                           class: "inline"
                         },
-                        class: "underline text-red-600 bg-transparent p-0 border-0 cursor-pointer align-baseline" %>
+                        class: "underline text-black bg-transparent p-0 border-0 cursor-pointer align-baseline" %>
                 </div>
               </td>
             </tr>
@@ -191,7 +200,7 @@
                               onsubmit: "return confirm('Delete this provision?')",
                               class: "inline"
                             },
-                            class: "underline text-red-600 bg-transparent p-0 border-0 cursor-pointer align-baseline" %>
+                            class: "underline text-black bg-transparent p-0 border-0 cursor-pointer align-baseline" %>
                     <% else %>
                       <span class="text-gray-400">No Act</span>
                     <% end %>

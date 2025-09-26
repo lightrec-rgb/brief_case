@@ -4,16 +4,11 @@
   <%= link_to "← Back to Subjects", subjects_path, class: "underline" %>
 </p>
 
-<%# --- Partition entries into cases and provisions --- %>
-<% cases      = @entries.select { |e| e.kind == "Case" } %>
-<% provisions = @entries.select { |e| e.kind == "Provision" } %>
-<% grouped    = provisions.group_by { |e| e.provision_detail&.act || :__unlinked } %>
-
 <!-- CASES SECTION -->
 <section class="mt-6">
   <h2 class="text-lg font-semibold mb-2">Cases in this subject</h2>
 
-  <% if cases.none? %>
+  <% if @cases.none? %>
     <p class="text-gray-600">No cases yet.</p>
   <% else %>
     <table class="w-full text-sm border-collapse">
@@ -26,7 +21,7 @@
         </tr>
       </thead>
       <tbody>
-        <% cases.each do |entry| %>
+        <% @cases.each do |entry| %>
           <% c = entry.case_detail %>
           <% s = entry.subject %>
           <tr class="border-b">
@@ -41,7 +36,6 @@
               <div class="flex justify-center items-center gap-2 whitespace-nowrap">
                 <%= link_to "Open", entry_path(entry), class: "underline" %>
                 <%= link_to "Edit", edit_entry_path(entry), class: "underline" %>
-                <%# No Delete for cases on Subject show (kept simpler here) %>
               </div>
             </td>
           </tr>
@@ -77,7 +71,6 @@
               <div class="flex justify-center items-center gap-2 whitespace-nowrap">
                 <%= link_to "Add Provision", new_act_provision_path(act), class: "underline" %>
                 <%= link_to "Edit", edit_act_path(act), class: "underline" %>
-                <%# No Delete Act here %>
               </div>
             </td>
           </tr>
@@ -91,10 +84,15 @@
 <section class="mt-10">
   <h2 class="text-lg font-semibold mb-2">Provisions by Act</h2>
 
-  <% if provisions.none? %>
+  <% if @provisions.none? %>
     <p class="text-gray-600">No provisions yet.</p>
   <% else %>
+    <% grouped = @provisions.group_by { |e| e.provision_detail&.act || :__unlinked } %>
+    <% grouped = grouped.sort_by { |act_or_key, _| act_or_key == :__unlinked ? "zzz" : act_or_key.display_name.to_s.downcase } %>
+
     <% grouped.each do |act_or_key, entries_for_act| %>
+      <% entries_for_act = entries_for_act.sort_by { |e| e.provision_detail&.provision_ref.to_s.downcase } %>
+
       <% if act_or_key == :__unlinked %>
         <h3 class="text-md font-semibold mt-6 mb-2">Unlinked provisions</h3>
       <% else %>
@@ -114,16 +112,13 @@
             <% p = entry.provision_detail %>
             <tr class="border-b">
               <td class="px-3 py-2 whitespace-nowrap">
-                <%= link_to(p&.provision_ref.presence || "—",
-                            entry_path(entry),
-                            class: "underline") %>
+                <%= link_to(p&.provision_ref.presence || "—", entry_path(entry), class: "underline") %>
               </td>
               <td class="px-3 py-2 text-gray-500 whitespace-nowrap"><%= l(entry.updated_at, format: :short) %></td>
               <td class="px-3 py-2">
                 <div class="flex justify-center items-center gap-2 whitespace-nowrap">
                   <% if p&.act %>
                     <%= link_to "Edit", edit_act_provision_path(p.act, p), class: "underline" %>
-                    <%# No Delete provision here %>
                   <% else %>
                     <span class="text-gray-400">No Act</span>
                   <% end %>

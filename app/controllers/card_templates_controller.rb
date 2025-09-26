@@ -1,18 +1,54 @@
 class CardTemplatesController < ApplicationController
   before_action :authenticate_user!
+
+  # Load the subject for the current user for these actions
   before_action :set_card, only: [ :show, :edit, :update, :destroy ]
 
-  # load current user's subjects and pick the active one (or first)
-  # build the entries list for the subject
+  # === Create ===
+  # Identify kind and build a new card_template with presets
+  # Call build_detail method so case and provision subforms fields exist
+  # Set card as an alias for the views
+  def new
+    @subject = current_user.subjects.find_by(id: params[:subject_id])
+    kind = params[:kind].presence || "Case"
+    @entry   = CardTemplate.new(user: current_user, subject: @subject, kind: kind)
+    build_detail_for(@entry)
+    @card = @entry
+  end
+
+  # Look up subject and build a card_template
+  def create
+    @subject = current_user.subjects.find(card_params[:subject_id])
+    @entry   = CardTemplate.new(card_params.merge(user: current_user))
+
+    if @entry.save
+      redirect_to entries_path(subject_id: @entry.subject_id), notice: "Entry created", status: :see_other
+    else
+      build_detail_for(@entry)
+      @card = @entry
+      render :new, status: :unprocessable_entity
+    end
+  end
+
+  # === Read ===
+  # Load the current user's subjects and pick the last one (or first alphabetically)
+  # Get all IDs for active subject and children and build entries list (cases and provisions)
+  # Order case by case name, provisions by Act name
+  # Load Acts in the subtree and order them by Act name
   def index
     @subjects = current_user.subjects.order(:name)
-    @subject  = @subjects.find_by(id: params[:subject_id]) || @subjects.first
+
+    if params[:subject_id].present?
+      @subject = current_user.subjects.find_by(id: params[:subject_id])
+      session[:last_subject_id] = @subject&.id
+    else
+      @subject = current_user.subjects.find_by(id: session[:last_subject_id]) || @subjects.first
+    end
 
     @entries =
     if @subject
       subtree_ids = @subject.subtree_ids
 
-      # existing entries (Cases + Provision entries)
       CardTemplate.owned_by(current_user)
                   .where(subject_id: subtree_ids)
                   .left_joins(:case_detail, :provision_detail)
@@ -40,43 +76,20 @@ class CardTemplatesController < ApplicationController
     end
   end
 
-  # require subject ID to create a new entry
-  # set up a new card_template with presets
-  # build the case so UI form shows fields
-  def new
-    @subject = current_user.subjects.find_by(id: params[:subject_id])
-    kind = params[:kind].presence || "Case"
-    @entry   = CardTemplate.new(user: current_user, subject: @subject, kind: kind)
-    build_detail_for(@entry)
-    @card = @entry
-  end
-
-  # look up subject and build the 'template'
-  def create
-    @subject = current_user.subjects.find(card_params[:subject_id])
-    @entry   = CardTemplate.new(card_params.merge(user: current_user))
-
-    if @entry.save
-      redirect_to entries_path(subject_id: @entry.subject_id), notice: "Entry created", status: :see_other
-    else
-      build_detail_for(@entry)
-      @card = @entry
-      render :new, status: :unprocessable_entity
-    end
-  end
-
-  # ensure entry and card are aliases for views
+  # Make entry and card aliases for views
   def show
     @entry = @card
   end
 
-  # ensure entry and card are aliases for edit so form has fields
+  # === Update ===
+  # Make entry and card aliases for edit
+  # Call build_detail method so case and provision subforms fields exist
   def edit
     @entry = @card
     build_detail_for(@entry)
   end
 
-  # updates the template
+  # Update with strong parameters
   def update
     if @card.update(card_params)
       redirect_to entries_path(subject_id: @card.subject_id), notice: "Entry updated", status: :see_other
@@ -86,7 +99,8 @@ class CardTemplatesController < ApplicationController
     end
   end
 
-  # delete the template
+  # === Destroy ===
+  # Delete the card_template and redirect back to subject list
   def destroy
     subject_id = @card.subject_id
     @card.destroy!
@@ -94,14 +108,14 @@ class CardTemplatesController < ApplicationController
   end
 
   private
-  #  find the card_template for the current user and hard guards to serve Case
+  #  Find the card_template for the current user
   def set_card
     @card = CardTemplate.owned_by(current_user)
                         .includes(:subject, :case_detail, :provision_detail)
                         .find(params[:id])
   end
 
-  # ensure nested detail exists so form fields render
+  # Ensure nested detail exists so form fields render
   def build_detail_for(entry)
     case entry.kind
     when "Case"    then entry.build_case_detail    unless entry.case_detail
@@ -109,7 +123,7 @@ class CardTemplatesController < ApplicationController
     end
   end
 
-  # strong params
+  # Strong paramaters to whitelist, including nested attributes for cases and provisions
   def card_params
     params.require(:card_template).permit(
       :subject_id,
