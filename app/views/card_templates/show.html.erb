@@ -1,3 +1,9 @@
+<%# Back link uses the computed @return_subject_id, which prefers params → session → entry subject %>
+<div class="mb-4">
+  <%= link_to "← Back to Cards", entries_path(subject_id: @return_subject_id),
+      class: "text-sm underline text-gray-700 hover:text-gray-900" %>
+</div>
+
 <% if @entry.kind == "Case" %>
   <% c = @entry.case_detail %>
   <h1 class="text-xl font-semibold mb-2"><%= c&.case_name.presence || "(untitled)" %></h1>
@@ -22,7 +28,7 @@
 <% elsif @entry.kind == "Provision" %>
   <% s = @entry.provision_detail %>
   <h1 class="text-xl font-semibold mb-2">
-    <%= (s&.act_short_name.presence || s&.act_name.presence || "(untitled)") %>
+    <%= s&.act&.act_name.presence || "(untitled Act)" %>
   </h1>
   <p class="text-gray-600 mb-2"><strong>Subject:</strong> <%= @entry.subject&.name %></p>
   <p class="mb-4"><strong>Provision:</strong> <%= s&.provision_ref.presence || "—" %></p>
@@ -32,20 +38,15 @@
       <h2 class="font-semibold">Provision Text</h2>
       <%= s&.provision_text.present? ? simple_format(s.provision_text) : content_tag(:p, "—", class: "text-gray-500") %>
     </div>
-    <div class="mt-8 grid gap-4 md:grid-cols-2">
-      <div>
-        <h2 class="font-semibold">Jurisdiction</h2>
-        <%= s&.jurisdiction.present? ? s.jurisdiction : content_tag(:span, "—", class: "text-gray-500") %>
-      </div>
-      <div>
-        <h2 class="font-semibold">Year</h2>
-        <%= s&.year.present? ? s.year : content_tag(:span, "—", class: "text-gray-500") %>
-      </div>
-    </div>
   </div>
 <% end %>
 
 <p class="mt-6">
-  <%= link_to "Edit", edit_entry_path(@entry), class: "underline" %> ·
-  <%= link_to "Back to Entries", entries_path(subject_id: @entry.subject_id), class: "underline" %>
+  <%= link_to "Edit",
+        edit_entry_path(@entry, subject_id: @return_subject_id),
+        class: "underline" %>
+  ·
+  <%= link_to "Back to Cards",
+        entries_path(subject_id: @return_subject_id),
+        class: "underline" %>
 </p>

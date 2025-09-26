@@ -2,7 +2,7 @@ class SubjectsController < ApplicationController
   before_action :authenticate_user!
 
   # Load the subject for the current user for these actions
-  before_action :set_subject, only: [ :show, :edit, :update, :destroy ]
+  before_action :set_subject, only: [ :edit, :update, :destroy ]
 
   # === Create ===
   # Build a new subject for the current user

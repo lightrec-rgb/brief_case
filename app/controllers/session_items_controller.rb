@@ -25,6 +25,10 @@ class SessionItemsController < ApplicationController
 
   # Allow for fitering by session by user
   def set_item
-    @item = SessionItem.joins(:session).where(sessions: { user_id: current_user.id }).find(params[:id])
+    @item = SessionItem
+           .joins(:session)
+           .includes(:session)
+           .where(sessions: { user_id: current_user.id })
+           .find(params[:id])
   end
 end

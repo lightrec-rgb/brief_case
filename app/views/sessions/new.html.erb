@@ -1,45 +1,100 @@
-<h1 class="text-2xl font-semibold mb-4">Start a new session</h1>
+<h1 class="text-2xl font-semibold mb-4">Create a new session</h1>
 
-<%= form_with model: @session, url: sessions_path, method: :post, class: "grid gap-4 max-w-xl" do |f| %>
+<%= form_with model: @session, url: sessions_path, method: :post,
+              class: "grid gap-6 max-w-xl", id: "new-session-form" do |f| %>
+
+  <!-- Subject -->
   <div>
-    <%= f.label :subject_id, "Subject", class: "block font-medium" %>
+    <%= f.label :subject_id, "Subject", class: "block font-medium mb-1" %>
     <%= f.select :subject_id,
           options_for_select(subject_options_for_select(current_user), @subject&.id),
           {},
-          class: "border rounded px-2 py-1 w-full" %>
+          class: "border rounded px-2 py-1 w-full",
+          data: { subject_counts: @subject_card_counts.to_json } %>
   </div>
 
+  <!-- Session name -->
   <div>
-    <%= f.label :name, "Session name (optional)", class: "block font-medium" %>
-    <%= f.text_field :name, class: "border rounded px-2 py-1 w-full", placeholder: "e.g., Evening Review" %>
-  </div>
-  <div>
-  <span class="block font-medium">Entry type</span>
-  <div class="mt-1 space-y-1 text-sm">
-    <label class="inline-flex items-center gap-2">
-      <%= f.radio_button :entry_scope, "both", checked: true %>
-      <span>Both (cases and provisions)</span>
-    </label>
-    <label class="inline-flex items-center gap-2">
-      <%= f.radio_button :entry_scope, "cases" %>
-      <span>Cases only</span>
-    </label>
-    <label class="inline-flex items-center gap-2">
-      <%= f.radio_button :entry_scope, "provisions" %>
-      <span>Provisions only</span>
-    </label>
-  </div>
-  <p class="text-xs text-gray-500 mt-1">Choose what to include in this session.</p>
-</div>
-
-  <div>
-    <%= f.label :count, "How many cards? (leave blank for all)", class: "block font-medium" %>
-    <%= f.number_field :count, min: 0, step: 1, class: "border rounded px-2 py-1 w-40" %>
-    <p class="text-xs text-gray-500 mt-1">If 0/blank, all cards in the subject are included.</p>
+    <%= f.label :name, "Session name", class: "block font-medium mb-1" %>
+    <%= f.text_field :name,
+          class: "border rounded px-2 py-1 w-full",
+          placeholder: "e.g., Exam Review" %>
   </div>
 
+  <!-- Card types -->
   <div>
-    <%= f.submit "Create session", class: "bg-brand-blue text-white px-3 py-2 rounded hover:bg-gold" %>
+    <span class="block font-medium mb-1">Card types</span>
+    <div class="space-y-1 text-sm" id="entry-scope-group">
+      <label class="inline-flex items-center gap-2">
+        <%= f.radio_button :entry_scope, "both", checked: true %>
+        <span>Both (cases and provisions)</span>
+      </label>
+      <label class="inline-flex items-center gap-2">
+        <%= f.radio_button :entry_scope, "cases" %>
+        <span>Cases only</span>
+      </label>
+      <label class="inline-flex items-center gap-2">
+        <%= f.radio_button :entry_scope, "provisions" %>
+        <span>Provisions only</span>
+      </label>
+    </div>
+  </div>
+
+  <!-- Available cards -->
+  <div>
+    <span class="block font-medium mb-1">Available cards</span>
+    <span id="available-count"
+          class="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-sm text-gray-700">0</span>
+  </div>
+
+  <!-- Card count -->
+  <div>
+    <%= f.label :count, "How many cards? (leave blank for all)", class: "block font-medium mb-1" %>
+    <%= f.number_field :count,
+          min: 0, step: 1,
+          class: "border rounded px-2 py-1 w-40" %>
+  </div>
+
+  <!-- Actions -->
+  <div>
+    <%= f.submit "Create session",
+          class: "bg-brand-blue text-white px-3 py-2 rounded hover:bg-gold" %>
     <%= link_to "Cancel", sessions_path, class: "ml-3 underline" %>
   </div>
+
 <% end %>
+
+<script>
+(function () {
+  const form = document.getElementById("new-session-form");
+  if (!form) return;
+
+  const subjectSelect = form.querySelector("select[name='session[subject_id]']");
+  const scopeRadios   = form.querySelectorAll("input[name='session[entry_scope]']");
+  const badge         = document.getElementById("available-count");
+
+  const counts = (() => {
+    try {
+      return JSON.parse(subjectSelect.dataset.subjectCounts || "{}");
+    } catch(e) {
+      return {};
+    }
+  })();
+
+  function currentScope() {
+    const checked = Array.from(scopeRadios).find(r => r.checked);
+    return (checked && checked.value) || "both";
+  }
+
+  function updateBadge() {
+    const subjId = subjectSelect.value;
+    const scope  = currentScope();
+    const c      = (counts[subjId] && counts[subjId][scope]) || 0;
+    badge.textContent = c;
+  }
+
+  subjectSelect.addEventListener("change", updateBadge);
+  scopeRadios.forEach(r => r.addEventListener("change", updateBadge));
+  updateBadge();
+})();
+</script>

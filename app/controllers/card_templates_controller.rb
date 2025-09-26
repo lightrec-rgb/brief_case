@@ -3,6 +3,7 @@ class CardTemplatesController < ApplicationController
 
   # Load the subject for the current user for these actions
   before_action :set_card, only: [ :show, :edit, :update, :destroy ]
+  before_action :set_return_subject_id, only: [ :show, :edit, :update, :destroy ]
 
   # === Create ===
   # Identify kind and build a new card_template with presets
@@ -22,7 +23,7 @@ class CardTemplatesController < ApplicationController
     @entry   = CardTemplate.new(card_params.merge(user: current_user))
 
     if @entry.save
-      redirect_to entries_path(subject_id: @entry.subject_id), notice: "Entry created", status: :see_other
+      redirect_to entries_path(subject_id: @subject.id), notice: "Entry created", status: :see_other
     else
       build_detail_for(@entry)
       @card = @entry
@@ -66,11 +67,12 @@ class CardTemplatesController < ApplicationController
     end
 
     if @subject
-    subtree_ids = @subject.subtree_ids
-    @acts = current_user.acts
-                        .where(subject_id: subtree_ids)
-                        .includes(:subject, :provisions)
-                        .order(:act_name, :year, :jurisdiction)
+      tree_ids = @subject.root.subtree_ids
+
+      @acts = current_user.acts
+                          .where(subject_id: tree_ids)
+                          .includes(:subject, :provisions)
+                          .order(:act_name, :year, :jurisdiction)
     else
       @acts = Act.none
     end
@@ -92,7 +94,7 @@ class CardTemplatesController < ApplicationController
   # Update with strong parameters
   def update
     if @card.update(card_params)
-      redirect_to entries_path(subject_id: @card.subject_id), notice: "Entry updated", status: :see_other
+      redirect_to entries_path(subject_id: @return_subject_id), notice: "Entry updated", status: :see_other
     else
       build_detail_for(@card)
       render :edit, status: :unprocessable_entity
@@ -102,17 +104,30 @@ class CardTemplatesController < ApplicationController
   # === Destroy ===
   # Delete the card_template and redirect back to subject list
   def destroy
-    subject_id = @card.subject_id
     @card.destroy!
-    redirect_to entries_path(subject_id: subject_id), notice: "Deleted", status: :see_other
+    redirect_to entries_path(subject_id: @return_subject_id), notice: "Deleted", status: :see_other
   end
 
   private
   #  Find the card_template for the current user
   def set_card
     @card = CardTemplate.owned_by(current_user)
-                        .includes(:subject, :case_detail, :provision_detail)
+                        .includes(:subject, :case_detail, provision_detail: :act)
                         .find(params[:id])
+  end
+
+  # Determine which subject to return back to when clicking on the link
+  def set_return_subject_id
+    @return_subject_id =
+      if params[:subject_id].present? &&
+         current_user.subjects.exists?(id: params[:subject_id])
+        params[:subject_id]
+      elsif session[:last_subject_id].present? &&
+            current_user.subjects.exists?(id: session[:last_subject_id])
+        session[:last_subject_id]
+      else
+        @card.subject_id
+      end
   end
 
   # Ensure nested detail exists so form fields render
@@ -128,8 +143,8 @@ class CardTemplatesController < ApplicationController
     params.require(:card_template).permit(
       :subject_id,
       :kind,
-      case_detail_attributes:    [ :id, :case_name, :case_short_name, :full_citation, :material_facts, :issue, :key_principle ],
-      provision_detail_attributes: [ :id, :act_name, :act_short_name, :jurisdiction, :year, :provision_ref, :provision_text ]
+      case_detail_attributes:      [ :id, :case_name, :case_short_name, :full_citation, :material_facts, :issue, :key_principle ],
+      provision_detail_attributes: [ :id, :act_name, :act_short_name, :jurisdiction, :year, :provision_ref, :summary, :provision_text ]
     )
   end
 end

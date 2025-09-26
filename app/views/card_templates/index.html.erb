@@ -19,18 +19,16 @@
 <% if @subject.nil? %>
   <p class="text-gray-600">Create a subject first to add entries.</p>
 <% else %>
-  <% # Partition entries into cases and provisions, then sort each %>
+  <%# ---------------- Partition + sort ---------------- %>
   <% cases = @entries.select { |e| e.kind == "Case" }.sort_by do |e|
-      c = e.case_detail
-      # sort strictly by case_name (case-insensitive), with id as a stable tiebreaker
-      [c&.case_name.to_s.strip.downcase, e.id]
-    end %>
+       c = e.case_detail
+       [c&.case_name.to_s.strip.downcase, e.id]
+     end %>
 
   <% provisions = @entries.select { |e| e.kind == "Provision" }.sort_by do |e|
-      p = e.provision_detail
-      # sort by Act display_name, then provision_ref (both case-insensitive), with id as tiebreaker
-      [p&.act&.display_name.to_s.downcase, p&.provision_ref.to_s.downcase, e.id]
-    end %>
+       pd = e.provision_detail
+       [pd&.act&.display_name.to_s.downcase, pd&.provision_ref.to_s.downcase, e.id]
+     end %>
 
   <!-- CASES SECTION -->
   <section class="mt-6">
@@ -47,38 +45,31 @@
       <table class="w-full text-sm">
         <thead>
           <tr class="text-left border-b">
-            <th class="py-1 pr-1 w-1/3">Name</th>
-            <th class="py-1 pr-1 w-1/3">Reference</th>
-            <th class="py-1 pr-1 w-1/6">Updated</th>
-            <th class="py-1 pr-0 w-auto text-center">Actions</th>
+            <th class="py-1 pr-1 w-1/2">Name</th>
+            <th class="py-1 pr-1 w-1/4">From topic</th>
+            <th class="py-1 pr-0 w-1/4 text-center">Actions</th>
           </tr>
         </thead>
         <tbody>
           <% cases.each do |entry| %>
             <% c = entry.case_detail %>
-            <tr class="border-b">
-              <td class="py-1 pr-1 align-top truncate max-w-[320px]" title="<%= c&.case_name %>">
-                <%= c&.case_name.presence || "(untitled)" %>
+            <tr class="border-b hover:bg-gray-50 cursor-pointer"
+                onclick="window.location='<%= entry_path(entry) %>'"
+                role="link" tabindex="0">
+              <td class="py-1 pr-1 align-top truncate max-w-[480px]" title="<%= c&.full_citation %>">
+                <%= c&.full_citation.presence || "(untitled)" %>
               </td>
-              <td class="py-1 pr-1 align-top break-words max-w-[360px]">
-                <%= c&.full_citation.presence || "—" %>
-              </td>
-              <td class="py-1 pr-1 align-top text-gray-500 whitespace-nowrap">
-                <%= l(entry.updated_at, format: :short) %>
+              <td class="py-1 pr-1 align-top text-gray-500">
+                <%= entry.subject&.name || "(unknown topic)" %>
               </td>
               <td class="py-1 pr-0 align-top">
                 <div class="flex justify-center items-center gap-2 whitespace-nowrap">
-                  <%= link_to "Show", entry_path(entry), class: "underline" %>
                   <%= link_to "Edit", edit_entry_path(entry), class: "underline" %>
                   <%= button_to "Delete",
                         entry_path(entry),
                         method: :delete,
                         data: { turbo_confirm: "Delete this case?" },
-                        form:  {
-                          data: { turbo_confirm: "Delete this case?" },
-                          onsubmit: "return confirm('Delete this case?')",
-                          class: "inline"
-                        },
+                        form:  { class: "inline" },
                         class: "underline text-black bg-transparent p-0 border-0 cursor-pointer align-baseline" %>
                 </div>
               </td>
@@ -105,9 +96,8 @@
         <thead>
           <tr class="text-left border-b">
             <th class="py-1 pr-1 w-1/2">Act</th>
-            <th class="py-1 pr-1 w-1/6">Provisions</th>
-            <th class="py-1 pr-1 w-1/6">Updated</th>
-            <th class="py-1 pr-0 w-1/6 text-center">Actions</th>
+            <th class="py-1 pr-1 w-1/4">Provisions</th>
+            <th class="py-1 pr-0 w-1/4 text-center">Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -115,12 +105,11 @@
             <tr class="border-b" id="act-<%= act.id %>">
               <td class="py-1 pr-1 align-top"><%= act.display_name %></td>
               <td class="py-1 pr-1 align-top"><%= act.provisions.size %></td>
-              <td class="py-1 pr-1 align-top text-gray-500 whitespace-nowrap">
-                <%= l(act.updated_at, format: :short) %>
-              </td>
               <td class="py-2 pr-2">
                 <div class="flex justify-center items-center gap-2 whitespace-nowrap">
-                  <%= link_to "Add Provision", new_act_provision_path(act), class: "underline" %>
+                  <%= link_to "Add Provision",
+                        new_act_provision_path(act, subject_id: @subject.id),
+                        class: "underline" %>
                   <%= link_to "Edit Act", edit_act_path(act), class: "underline" %>
                   <% if act.provisions.exists? %>
                     <span class="text-gray-400" title="Delete provisions first">Delete Act</span>
@@ -129,11 +118,7 @@
                           act_path(act),
                           method: :delete,
                           data: { turbo_confirm: "Delete this Act?" },
-                          form:  {
-                            data: { turbo_confirm: "Delete this Act?" },
-                            onsubmit: "return confirm('Delete this Act?')",
-                            class: "inline"
-                          },
+                          form:  { class: "inline" },
                           class: "underline text-red-600 bg-transparent p-0 border-0 cursor-pointer align-baseline" %>
                   <% end %>
                 </div>
@@ -147,13 +132,15 @@
 
   <!-- PROVISIONS BY ACT SECTION -->
   <section class="mt-10">
-    <h2 class="text-lg font-semibold mb-2">Provisions by Act</h2>
-
-    <% grouped = provisions.group_by { |e| e.provision_detail&.act || :__unlinked } %>
+    <h2 class="text-lg font-semibold mb-2">
+      Provisions by Act for <%= @subject.name %>
+    </h2>
 
     <% if provisions.none? %>
       <p class="text-gray-600">No provisions yet.</p>
     <% else %>
+      <% grouped = provisions.group_by { |e| e.provision_detail&.act || :__unlinked } %>
+
       <% grouped.each do |act_or_key, entries_for_act| %>
         <% if act_or_key == :__unlinked %>
           <h3 class="text-md font-semibold mt-6 mb-2">Unlinked provisions</h3>
@@ -162,7 +149,9 @@
           <div class="flex items-center justify-between">
             <h3 class="text-md font-semibold mt-6 mb-2"><%= act.display_name %></h3>
             <div>
-              <%= link_to "Add Provision", new_act_provision_path(act), class: "underline text-sm" %>
+              <%= link_to "Add Provision",
+                    new_act_provision_path(act, subject_id: @subject.id),
+                    class: "underline text-sm" %>
             </div>
           </div>
         <% end %>
@@ -170,36 +159,40 @@
         <table class="w-full text-sm mb-4">
           <thead>
             <tr class="text-left border-b">
-              <th class="py-1 pr-1 w-1/2">Provision ref</th>
-              <th class="py-1 pr-1 w-1/6">Updated</th>
-              <th class="py-1 pr-0  w-1/6 text-center">Actions</th>
+              <th class="py-1 pr-1 w-1/2">Provision (ref + summary)</th>
+              <th class="py-1 pr-1 w-1/4">From topic</th>
+              <th class="py-1 pr-0 w-1/4 text-center">Actions</th>
             </tr>
           </thead>
           <tbody>
             <% entries_for_act.each do |entry| %>
               <% s = entry.provision_detail %>
-              <tr class="border-b">
-                <td class="py-1 pr-1 align-top whitespace-nowrap">
-                  <%= link_to(s&.provision_ref.presence || "—",
-                              entry_path(entry),
-                              class: "underline") %>
+              <tr class="border-b hover:bg-gray-50 cursor-pointer"
+                  onclick="window.location='<%= entry_path(entry) %>'"
+                  role="link" tabindex="0">
+                <td class="py-1 pr-1 align-top">
+                  <div class="max-w-[480px] truncate">
+                    <span class="font-medium"><%= s&.provision_ref.presence || "—" %></span>
+                    <% if s&.summary.present? %>
+                      <span class="text-gray-500"> · </span>
+                      <span class="text-gray-700"><%= s.summary %></span>
+                    <% end %>
+                  </div>
                 </td>
-                <td class="py-1 pr-1 align-top text-gray-500 whitespace-nowrap">
-                  <%= l(entry.updated_at, format: :short) %>
+                <td class="py-1 pr-1 align-top text-gray-500">
+                  <%= entry.subject&.name || "(unknown topic)" %>
                 </td>
                 <td class="py-1 pr-0 align-top">
                   <div class="flex justify-center items-center gap-2 whitespace-nowrap">
                     <% if s&.act %>
-                      <%= link_to "Edit", edit_act_provision_path(s.act, s), class: "underline" %>
+                      <%= link_to "Edit",
+                            edit_act_provision_path(s.act, s, subject_id: @subject.id),
+                            class: "underline" %>
                       <%= button_to "Delete",
-                            act_provision_path(s.act, s),
+                            act_provision_path(s.act, s, subject_id: @subject.id),
                             method: :delete,
                             data: { turbo_confirm: "Delete this provision?" },
-                            form:  {
-                              data: { turbo_confirm: "Delete this provision?" },
-                              onsubmit: "return confirm('Delete this provision?')",
-                              class: "inline"
-                            },
+                            form:  { class: "inline" },
                             class: "underline text-black bg-transparent p-0 border-0 cursor-pointer align-baseline" %>
                     <% else %>
                       <span class="text-gray-400">No Act</span>

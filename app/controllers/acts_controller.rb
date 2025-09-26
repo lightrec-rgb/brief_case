@@ -26,7 +26,7 @@ class ActsController < ApplicationController
   end
 
   # === Read ===
-  # Load the Act's provisions with associated card_tenplate, order by provision reference
+  # Load the Act's provisions with associated card_template, order by provision reference
   def show
     @provisions = @act.provisions.joins(:card_template)
                       .includes(:card_template)

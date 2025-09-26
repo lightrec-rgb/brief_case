@@ -2,9 +2,10 @@
 
 <%= form_for(resource,
              as: resource_name,
-             url: user_session_path,                
+             url: user_session_path,
              html: { method: :post },
-             data: { turbo: false }) do |f| %>       
+             data: { turbo: false }) do |f| %>
+
   <div class="space-y-4">
     <div>
       <%= f.label :email, class: "block text-sm font-medium text-gray-700" %>
@@ -29,12 +30,13 @@
       <%= f.submit "Log in",
             class: "w-full bg-brand-blue text-white py-2 rounded-md hover:opacity-90" %>
     </div>
-
-    <div class="mt-2 text-right">
-      <%= render "devise/shared/links" %>
-    </div>
   </div>
 <% end %>
+
+<!-- Links (moved outside the form to avoid nested forms) -->
+<div class="mt-2 text-right">
+  <%= render "devise/shared/links" %>
+</div>
 
 <!-- Divider -->
 <div class="my-6 flex items-center">
@@ -43,4 +45,5 @@
   <div class="flex-grow border-t border-gray-200"></div>
 </div>
 
+<!-- Google sign-in button (safe, not nested inside the login form) -->
 <%= render "devise/shared/google_button" %>

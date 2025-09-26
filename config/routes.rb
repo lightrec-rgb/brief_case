@@ -12,7 +12,7 @@ Rails.application.routes.draw do
   end
 
   # subjects live at /decks
-  resources :subjects, path: "decks"
+  resources :subjects, path: "decks", only: [:index, :new, :create, :edit, :update, :destroy]
 
   # cases live at /entries
   resources :card_templates,
@@ -28,7 +28,7 @@ Rails.application.routes.draw do
   # study sessions live at /learn
   resources :sessions, path: "learn", controller: "sessions", only: [ :index, :new, :create, :show, :destroy ] do
   member do
-    post :start, :pause, :resume, :reset, :advance, :complete
+    post :start, :pause, :resume, :reset, :advance, :complete, :reopen
   end
 end
 

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_09_24_075603) do
+ActiveRecord::Schema[8.0].define(version: 2025_09_26_143112) do
   create_table "acts", force: :cascade do |t|
     t.integer "user_id", null: false
     t.integer "subject_id", null: false
@@ -64,6 +64,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_09_24_075603) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.integer "act_id"
+    t.string "summary"
     t.index ["act_id"], name: "index_provisions_on_act_id"
     t.index ["card_template_id"], name: "index_provisions_on_card_template_id", unique: true
   end
@@ -107,7 +108,9 @@ ActiveRecord::Schema[8.0].define(version: 2025_09_24_075603) do
     t.integer "shuffle_seed"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "status_before_complete"
     t.index ["status"], name: "index_sessions_on_status"
+    t.index ["status_before_complete"], name: "index_sessions_on_status_before_complete"
     t.index ["subject_id"], name: "index_sessions_on_subject_id"
     t.index ["user_id", "subject_id"], name: "index_sessions_on_user_id_and_subject_id"
     t.index ["user_id"], name: "index_sessions_on_user_id"

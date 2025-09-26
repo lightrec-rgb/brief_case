@@ -18,13 +18,17 @@
   <div class="grid gap-4">
     <div>
       <%= f.label :subject_id, "Subject" %><br>
-      <%= f.select :subject_id,
-        options_for_select(
-          subject_options_for_select(current_user),
-          (params[:subject_id] || @card.subject_id)
-        ),
-        {},
-        class: "border rounded px-2 py-1" %>
+      <% selected_subject_id =
+            if @card.persisted?
+              @card.subject_id       
+            else
+              params[:subject_id].presence || @card.subject_id 
+            end %>
+
+        <%= f.select :subject_id,
+              options_for_select(subject_options_for_select(current_user), selected_subject_id),
+              {},
+              class: "border rounded px-2 py-1" %>
     </div>
 
     <% if @card.kind == "Case" %>

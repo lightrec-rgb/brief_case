@@ -42,7 +42,8 @@ class Session < ApplicationRecord
       update!(
         status: "in_progress",
         started_at: (started_at || Time.current),
-        paused_at: nil
+        paused_at: nil,
+        completed_at: nil
       )
       if current_pos.to_i < 1
         first_pending = session_items.where.not(state: "done").order(:position).first
@@ -82,7 +83,17 @@ class Session < ApplicationRecord
 
   # Mark a session as finished (now outside the FSRS process)
   def complete!
-    update!(status: "completed", completed_at: Time.current, paused_at: nil)
+    update!(status_before_complete: status, status: "completed", completed_at: Time.current, paused_at: nil)
+  end
+
+  # Reopen a completed session back to prior state (now outside the FSRS process)
+  def reopen!
+      prev = status_before_complete.presence || "draft"
+      update!(
+        status:                 prev,
+        status_before_complete: nil,
+        completed_at:           nil
+      )
   end
 
   # === Deck building ===

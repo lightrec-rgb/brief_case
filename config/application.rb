@@ -17,11 +17,11 @@ module BriefCase
     config.autoload_lib(ignore: %w[assets tasks])
 
     # Configuration for the application, engines, and railties goes here.
-    #
     # These settings can be overridden in specific environments using the files
     # in config/environments, which are processed later.
-    #
     config.time_zone = "Australia/Melbourne"
-    # config.eager_load_paths << Rails.root.join("extras")
+
+    # Add builds folder to asset paths so Propshaft can serve tailwind.css
+    config.assets.paths << Rails.root.join("app/assets/builds")
   end
 end

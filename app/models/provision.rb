@@ -3,10 +3,11 @@ class Provision < ApplicationRecord
   belongs_to :act, optional: true
 
   # Must have a reference (section reference in legislation)
-  # and must have text of the provision
+  # and must have text of the provision and optional summary
   # and must be linked to an Act when created
   validates :provision_ref, presence: true
   validates :provision_text, presence: true
+  validates :summary, length: { maximum: 255 }, allow_blank: true
   validates :act, presence: true, on: :create
 
   # When creating a provision, copy the Act's header into the provision fields

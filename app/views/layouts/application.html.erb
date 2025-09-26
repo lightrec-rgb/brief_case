@@ -10,41 +10,37 @@
 
     <%= yield :head %>
 
-    <%# Enable PWA manifest for installable apps (make sure to enable in config/routes.rb too!) %>
-    <%#= tag.link rel: "manifest", href: pwa_manifest_path(format: :json) %>
-
     <link rel="icon" href="/icon.png" type="image/png">
     <link rel="icon" href="/icon.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="/icon.png">
 
-    <%# Includes all stylesheet files in app/assets/stylesheets %>
-    <%= stylesheet_link_tag "tailwind", "data-turbo-track": "reload" %>
+    <!-- Load the CSS file that contains Tailwind -->
+    <%= stylesheet_link_tag "tailwind", "data-turbo-track": "reload", "rel": "stylesheet" %>
+    <!-- Importmap + ensure application.js runs -->
     <%= javascript_importmap_tags %>
+    <%= javascript_import_module_tag "application" %>
   </head>
 
   <body class="bg-white min-h-screen flex flex-col">
-  <%= render "shared/navbar" %>
+    <%= render "shared/navbar" %>
 
-  <!-- Flash messages -->
-  <% flash.each do |key, message| %>
-    <% color = case key.to_sym
-      when :notice then "bg-green-100 text-green-800 border-green-300"
-      when :alert  then "bg-red-100 text-red-800 border-red-300"
-      else "bg-gray-100 text-gray-800 border-gray-300"
-    end %>
+    <% flash.each do |key, message| %>
+      <% color = case key.to_sym
+        when :notice then "bg-green-100 text-green-800 border-green-300"
+        when :alert  then "bg-red-100 text-red-800 border-red-300"
+        else "bg-gray-100 text-gray-800 border-gray-300"
+      end %>
+      <div class="mb-4 rounded border px-4 py-2 <%= color %>">
+        <%= message %>
+      </div>
+    <% end %>
 
-    <div class="mb-4 rounded border px-4 py-2 <%= color %>">
-      <%= message %>
-    </div>
-  <% end %>
-  
     <main class="flex-grow">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-      <%= yield %>
-    </div>
-  </main>
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <%= yield %>
+      </div>
+    </main>
 
-  <%= render "shared/footer" %>
-</body>
+    <%= render "shared/footer" %>
+  </body>
 </html>
-

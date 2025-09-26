@@ -1,7 +1,8 @@
-<% nodes.each do |subject, children| %>
+<%# app/views/subjects/_subject_tree.html.erb %>
+<% nodes.each do |subject, kids| %>
   <li class="my-1" data-subject-id="<%= subject.id %>">
     <div class="flex items-center gap-2">
-      <% if children.any? %>
+      <% if kids.any? %>
         <button type="button"
                 class="inline-flex items-center justify-center w-5 h-5 rounded hover:bg-gray-100"
                 aria-expanded="false"
@@ -12,6 +13,7 @@
         <span class="inline-block w-5 h-5"></span>
       <% end %>
 
+      <!-- Subject name is the link (replaces the old <span>name</span>) -->
       <span class="font-medium"><%= subject.name %></span>
 
       <!-- subtree total (cases + provisions) -->
@@ -22,32 +24,27 @@
       </span>
 
       <!-- direct entries in this subject only (cases + provisions) -->
-      <% entry_count = (CardTemplate.for_subject(subject)
-                                   .left_joins(:case_detail, :provision_detail)
-                                   .where("cases.id IS NOT NULL OR provisions.id IS NOT NULL")
-                                   .count rescue 0) %>
-      <span class="ml-1 text-xs text-gray-500">(<%= entry_count %>)</span>
 
       <span class="text-black text-xs">
-        (<%= link_to "Show", subject_path(subject) %> ·
-        <%= link_to "Edit", edit_subject_path(subject) %> ·
-        <%= button_to "Delete",
-              subject_path(subject),
-              method: :delete,
-              data: { turbo_confirm: "Delete this subject? (Only works if it has no sub-subjects or entries.)" },
-              form:  {
-                data: { turbo_confirm: "Delete this subject? (Only works if it has no sub-subjects or entries.)" },
-                onsubmit: "return confirm('Delete this subject? (Only works if it has no sub-subjects or entries.)')",
-                class: "inline"
-              },
-              class: "text-black bg-transparent p-0 border-0 cursor-pointer align-baseline" %>)
+        (<!-- no separate Show link -->
+         <%= link_to "Edit", edit_subject_path(subject) %> ·
+         <%= button_to "Delete",
+               subject_path(subject),
+               method: :delete,
+               data: { turbo_confirm: "Delete this subject? (Only works if it has no sub-subjects or entries.)" },
+               form:  {
+                 data: { turbo_confirm: "Delete this subject? (Only works if it has no sub-subjects or entries.)" },
+                 onsubmit: "return confirm('Delete this subject? (Only works if it has no sub-subjects or entries.)')",
+                 class: "inline"
+               },
+               class: "text-black bg-transparent p-0 border-0 cursor-pointer align-baseline" %>)
       </span>
     </div>
 
-    <% if children.any? %>
+    <% if kids.any? %>
       <ul class="border-l border-gray-200 hidden" data-tree-branch
           style="padding-left: <%= (depth + 1) * 1.25 %>rem;">
-        <%= render partial: "subject_tree", locals: { nodes: children, depth: depth + 1 } %>
+        <%= render partial: "subject_tree", locals: { nodes: kids, depth: depth + 1 } %>
       </ul>
     <% end %>
   </li>

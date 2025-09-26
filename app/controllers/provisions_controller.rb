@@ -24,8 +24,11 @@ class ProvisionsController < ApplicationController
   # Build a new card_template of kind provision to th same subject as the Act
   # Assign attributes to the card_template
   # Save the provision and redirect to entries page or provide an error
+  # Acts shareable within tree
   def create
-    @entry = current_user.card_templates.new(subject: @act.subject, kind: "Provision")
+    working_subject = current_user.subjects.find_by(id: params[:subject_id]) || @act.subject
+
+    @entry = current_user.card_templates.new(subject: working_subject, kind: "Provision")
     @entry.build_provision_detail unless @entry.provision_detail
     @entry.assign_attributes(entry_params)
 
@@ -36,7 +39,7 @@ class ProvisionsController < ApplicationController
     @entry.provision_detail.act = @act
 
     if @entry.save
-      redirect_to entries_path(subject_id: @act.subject_id, anchor: "act-#{@act.id}"),
+      redirect_to entries_path(subject_id: working_subject.id, anchor: "act-#{@act.id}"),
                   notice: "Provision added"
     else
       render :new, status: :unprocessable_entity
@@ -56,9 +59,10 @@ class ProvisionsController < ApplicationController
 
   # Update card_template / provision detail, return to entries page or provide an error
   def update
+    working_subject = current_user.subjects.find_by(id: params[:subject_id]) || @act.subject
     @entry = @provision.card_template
     if @entry.update(entry_params)
-      redirect_to entries_path(subject_id: @act.subject_id, anchor: "act-#{@act.id}"),
+      redirect_to entries_path(subject_id: working_subject.id, anchor: "act-#{@act.id}"),
                   notice: "Provision updated"
     else
       render :edit, status: :unprocessable_entity
@@ -68,11 +72,12 @@ class ProvisionsController < ApplicationController
   # === Destroy ===
   # Deletes the provision and redirect back to subject list
   def destroy
+    working_subject = current_user.subjects.find_by(id: params[:subject_id]) || @act.subject
     if @provision
       @provision.destroy
-      redirect_to entries_path(subject_id: @act.subject_id, anchor: "act-#{@act.id}"),
-                status: :see_other,
-                notice: "Provision deleted"
+      redirect_to entries_path(subject_id: working_subject.id, anchor: "act-#{@act.id}"),
+                  status: :see_other,
+                  notice: "Provision deleted"
     end
   end
 
@@ -104,7 +109,7 @@ class ProvisionsController < ApplicationController
   def entry_params
     params.require(:card_template).permit(
       :name,
-      provision_detail_attributes: [ :id, :provision_ref, :provision_text ]
+      provision_detail_attributes: [ :id, :provision_ref, :summary, :provision_text ]
     )
   end
 end

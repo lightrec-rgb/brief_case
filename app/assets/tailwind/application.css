@@ -1,15 +1,17 @@
+/* === Tailwind v4 core === */
 @import "tailwindcss";
 
+/* === Theme tokens === */
 @theme {
-      --color-gold: oklch(0.7587 0.1433 90.71);
-      --color-brand-blue: oklch(0.3097 0.0305 266.25); 
+  --color-gold: oklch(0.7587 0.1433 90.71);
+  --color-brand-blue: oklch(0.3097 0.0305 266.25);
 }
 
+/* === Base tweaks (your tables) === */
 @layer base {
   table thead th {
     @apply text-left align-middle;
   }
-
   table tbody td {
     @apply align-middle;
   }
