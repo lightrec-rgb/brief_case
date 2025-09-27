@@ -1,37 +1,60 @@
-<%= form_with model: @act do |f| %>
-  <div class="mb-3">
-    <%= f.label :subject_id, "Subject" %>
+<%# Normalize local -> instance -> new %>
+<% act = local_assigns[:act] || @act || current_user.acts.new %>
+
+<%= form_with model: act do |f| %>
+  <% obj = f.object %>
+  <% if obj.errors.any? %>
+    <div class="mb-4 rounded-lg border border-red-300 bg-red-50 p-3 text-sm text-red-800">
+      <strong><%= pluralize(obj.errors.count, "error") %> prevented saving:</strong>
+      <ul class="mt-1 list-disc pl-5">
+        <% obj.errors.full_messages.each { |m| concat content_tag(:li, m) } %>
+      </ul>
+    </div>
+  <% end %>
+
+  <!-- Subject (acts live under a subject) -->
+  <div class="mb-4">
+    <%= f.label :subject_id, "Subject", class: "block text-sm font-medium text-gray-700" %>
+    <% selected_subject_id = params[:subject_id].presence || obj.subject_id %>
     <%= f.select :subject_id,
-          options_for_select(subject_options_for_select(current_user), @act.subject_id),
-          {}, class: "border rounded px-2 py-1 w-full" %>
+          options_for_select(subject_options_for_select(current_user), selected_subject_id),
+          {},
+          class: "mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-base shadow-sm focus:border-brand-blue focus:ring-2 focus:ring-brand-blue" %>
   </div>
 
-  <div class="mb-3">
-    <%= f.label :act_name, "Act name" %>
-    <%= f.text_field :act_name, class: "border p-2 w-full", required: true, autofocus: true %>
-  </div>
-
-  <div class="mb-3">
-    <%= f.label :act_short_name, "Short name" %>
-    <%= f.text_field :act_short_name, class: "border p-2 w-full" %>
-  </div>
-
+  <!-- Act fields -->
   <div class="grid gap-4 md:grid-cols-2">
     <div>
-      <%= f.label :jurisdiction %>
-      <%= f.text_field :jurisdiction, class: "border p-2 w-full" %>
+      <%= f.label :act_name, "Act name", class: "block text-sm font-medium text-gray-700" %>
+      <%= f.text_field :act_name,
+            class: "mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-base shadow-sm focus:border-brand-blue focus:ring-2 focus:ring-brand-blue",
+            required: true, autofocus: true, placeholder: "e.g., Crimes Act 1958 (Vic)" %>
     </div>
+
     <div>
-      <%= f.label :year %>
-      <%= f.number_field :year, class: "border p-2 w-full", min: 0, step: 1 %>
+      <%= f.label :act_short_name, "Short name (optional)", class: "block text-sm font-medium text-gray-700" %>
+      <%= f.text_field :act_short_name,
+            class: "mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-base shadow-sm focus:border-brand-blue focus:ring-2 focus:ring-brand-blue",
+            placeholder: "e.g., Crimes Act" %>
+    </div>
+
+    <div>
+      <%= f.label :jurisdiction, "Jurisdiction", class: "block text-sm font-medium text-gray-700" %>
+      <%= f.text_field :jurisdiction,
+            class: "mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-base shadow-sm focus:border-brand-blue focus:ring-2 focus:ring-brand-blue",
+            placeholder: "e.g., Vic" %>
+    </div>
+
+    <div>
+      <%= f.label :year, "Year", class: "block text-sm font-medium text-gray-700" %>
+      <%= f.number_field :year, min: 0, step: 1,
+            class: "mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-base shadow-sm focus:border-brand-blue focus:ring-2 focus:ring-brand-blue",
+            placeholder: "e.g., 1958" %>
     </div>
   </div>
 
-  <div class="mt-4 flex items-center gap-3">
-    <%= f.submit (@act.persisted? ? "Update Act" : "Save"),
-          class: "px-4 py-2 rounded bg-brand-blue text-white hover:bg-gold" %>
-    <%= link_to "Cancel",
-          entries_path(subject_id: (@act.subject_id || params[:subject_id])),
-          class: "underline text-sm" %>
+  <div class="mt-6">
+    <%= f.submit (obj.persisted? ? "Update Act" : "Create Act"),
+          class: "inline-flex items-center rounded-md bg-brand-blue px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-gold focus:outline-none focus:ring-2 focus:ring-brand-blue" %>
   </div>
 <% end %>

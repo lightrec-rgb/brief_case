@@ -1,19 +1,10 @@
-<h1 class="text-2xl font-semibold mb-4">Dashboard</h1>
-
-<%# ------- Quick counts (brand gradients) ------- %>
-<% subjects_count   = current_user.subjects.count %>
-<% acts_count       = current_user.acts.count %>
-<% cases_count      = CardTemplate.owned_by(current_user).left_joins(:case_detail).where("cases.id IS NOT NULL").count %>
-<% provisions_count = CardTemplate.owned_by(current_user).left_joins(:provision_detail).where("provisions.id IS NOT NULL").count %>
-<% only_subject_id  = (subjects_count == 1 ? current_user.subjects.pick(:id) : nil) %>
-
-<div class="grid md:grid-cols-2 gap-4">
-  <!-- Subjects (Brand blue gradient) -->
-  <div class="rounded-2xl p-4 text-white shadow-sm bg-gradient-to-br from-brand-blue to-blue-700">
+<div class="grid md:grid-cols-4 gap-4">
+  <!-- Subjects (Blue → Cyan gradient) -->
+  <div class="rounded-2xl p-4 text-white shadow-sm bg-gradient-to-br from-brand-blue via-blue-700 to-cyan-600">
     <div class="flex items-start justify-between">
       <div>
         <div class="text-sm opacity-90">Subjects</div>
-        <div class="text-3xl font-semibold mt-1"><%= subjects_count %></div>
+        <div class="text-3xl font-semibold mt-1"><%= @subjects_count %></div>
       </div>
       <div class="opacity-90" aria-hidden="true">📚</div>
     </div>
@@ -24,115 +15,127 @@
     </div>
   </div>
 
-  <!-- Cases (Brand gold gradient, dark text) -->
-  <div class="rounded-2xl p-4 text-slate-900 shadow-sm bg-gradient-to-br from-gold to-amber-300 border border-amber-200/60">
+  <!-- Cases (Enhanced Gold → Orange gradient, dark text) -->
+  <div class="rounded-2xl p-4 text-slate-900 shadow-sm bg-gradient-to-br from-amber-300 via-yellow-400 to-orange-400 border border-amber-200/60">
     <div class="flex items-start justify-between">
       <div>
         <div class="text-sm opacity-80">Cases</div>
-        <div class="text-3xl font-semibold mt-1"><%= cases_count %></div>
+        <div class="text-3xl font-semibold mt-1"><%= @cases_count %></div>
       </div>
       <div class="opacity-80" aria-hidden="true">⚖️</div>
     </div>
     <div class="mt-3">
       <%= link_to "Add Case",
-          new_entry_path(kind: "Case", subject_id: only_subject_id),
+          new_entry_path(kind: "Case", subject_id: @only_subject_id),
           class: "inline-block text-sm px-3 py-1.5 rounded-full bg-white/70 hover:bg-white focus:outline-none focus:ring-2 focus:ring-amber-300" %>
     </div>
   </div>
 
-  <!-- Acts (Brand blue → cyan gradient) -->
-  <div class="rounded-2xl p-4 text-white shadow-sm bg-gradient-to-br from-brand-blue via-blue-700 to-cyan-600">
+  <!-- Acts & Provisions (Purple → Indigo gradient) -->
+  <div class="rounded-2xl p-4 text-white shadow-sm bg-gradient-to-br from-purple-500 via-indigo-600 to-indigo-800">
     <div class="flex items-start justify-between">
       <div>
-        <div class="text-sm opacity-90">Acts</div>
-        <div class="text-3xl font-semibold mt-1"><%= acts_count %></div>
+        <div class="text-sm opacity-90">Acts &amp; Provisions</div>
+        <div class="text-3xl font-semibold mt-1">
+          <span class="align-middle"><%= @acts_count %></span>
+          <span class="text-base font-normal opacity-90 align-middle">Acts</span>
+          <span class="mx-1 opacity-75">·</span>
+          <span class="align-middle"><%= @provisions_count %></span>
+          <span class="text-base font-normal opacity-90 align-middle">Provisions</span>
+        </div>
       </div>
       <div class="opacity-90" aria-hidden="true">📜</div>
     </div>
     <div class="mt-3">
       <%= link_to "Add Act",
-          new_act_path(subject_id: only_subject_id),
+          new_act_path(subject_id: @only_subject_id),
           class: "inline-block text-sm px-3 py-1.5 rounded-full bg-white/20 hover:bg-white/30 focus:outline-none focus:ring-2 focus:ring-white/60" %>
     </div>
   </div>
 
-  <!-- Provisions (Brand gold gradient, dark text) -->
-  <div class="rounded-2xl p-4 text-slate-900 shadow-sm bg-gradient-to-br from-gold to-amber-300 border border-amber-200/60">
+  <!-- View cards -->
+  <div class="rounded-2xl p-4 text-slate-900 shadow-sm bg-gradient-to-br from-slate-50 to-slate-200 border border-slate-200/80">
     <div class="flex items-start justify-between">
       <div>
-        <div class="text-sm opacity-80">Provisions</div>
-        <div class="text-3xl font-semibold mt-1"><%= provisions_count %></div>
+        <div class="text-sm text-slate-700">View cards</div>
+        <div class="text-3xl font-semibold mt-1"><%= @entries_count %></div>
       </div>
-      <div class="opacity-80" aria-hidden="true">§</div>
+      <div class="text-slate-700" aria-hidden="true">🗂️</div>
     </div>
     <div class="mt-3">
-      <%= link_to "Manage provisions",
-          entries_path(subject_id: only_subject_id),
-          class: "inline-block text-sm px-3 py-1.5 rounded-full bg-white/70 hover:bg-white focus:outline-none focus:ring-2 focus:ring-amber-300" %>
+      <%= link_to "View cards",
+          entries_path(**(@only_subject_id ? { subject_id: @only_subject_id } : {})),
+          class: "inline-block text-sm px-3 py-1.5 rounded-full bg-white/70 hover:bg-white focus:outline-none focus:ring-2 focus:ring-slate-300" %>
     </div>
   </div>
-</div> <!-- ✅ CLOSES the tiles grid -->
+</div>
 
 <%# ===================== RECENT SESSIONS ===================== %>
 <div class="mt-8 w-full">
-  <h2 class="text-xl font-semibold mb-3">Recent sessions</h2>
+  <div class="flex items-center justify-between mb-3">
+    <h2 class="text-xl font-semibold">Recent sessions</h2>
+    <%= link_to "Create new session",
+          new_session_path,
+          class: "bg-brand-blue text-white px-3 py-2 rounded hover:bg-gold text-sm font-medium" %>
+  </div>
 
   <% recent = current_user.sessions.where.not(status: :completed).order(updated_at: :desc).limit(10) %>
-  <% most_recent = recent.first %>
-  <% others = recent.drop(1) %>
 
-  <% if most_recent.present? %>
-    <div class="rounded border p-4 bg-gray-50 mb-4">
-      <div class="flex items-center justify-between">
-        <div>
-          <div class="text-xs uppercase tracking-wide text-gray-500">Continue most recent</div>
-          <div class="font-semibold">
-            <%= most_recent.name.presence || "Session ##{most_recent.id}" %>
-            <span class="ml-2 text-sm text-gray-600">
-              • <%= most_recent.subject&.name %>
-              • Due <strong><%= most_recent.due_count %></strong>/<%= most_recent.total_count %>
-              • <%= most_recent.new_count %> new · <%= most_recent.review_count %> review
-            </span>
-          </div>
-        </div>
-        <div>
-          <%= link_to "Open",
-              session_path(most_recent),
-              class: "bg-brand-blue text-white px-3 py-2 rounded hover:bg-gold" %>
-        </div>
-      </div>
-    </div>
-  <% else %>
+  <% if recent.blank? %>
     <p class="text-gray-600">No sessions yet.</p>
-  <% end %>
-
-  <% if others.present? %>
+  <% else %>
     <div class="overflow-x-auto">
       <table class="w-full text-sm">
         <thead>
           <tr class="text-left border-b">
             <th class="py-2 pr-2">Name</th>
             <th class="py-2 pr-2">Subject</th>
-            <th class="py-2 pr-2">Due / Total</th>
-            <th class="py-2 pr-2">Cards (New · Review)</th>
+            <th class="py-2 px-2 text-center">Total</th>
+            <th class="py-2 px-2 text-center">New</th>
+            <th class="py-2 px-2 text-center">Due</th>
             <th class="py-2 pr-2">Status</th>
-            <th class="py-2 pr-2">Open</th>
+            <th class="py-2 px-2 text-center">Actions</th>
           </tr>
         </thead>
         <tbody>
-          <% others.each do |s| %>
+          <% recent.each do |s| %>
+            <% total     = s.total_count.to_i %>
+            <% new_cards = s.new_count.to_i %>
+            <% due_now   = s.due_count.to_i %>
+
             <tr class="border-b">
               <td class="py-2 pr-2"><%= s.name.presence || "Session ##{s.id}" %></td>
-              <td class="py-2 pr-2"><%= s.subject&.name %></td>
-              <td class="py-2 pr-2">
-                <strong><%= s.due_count %></strong>/<%= s.total_count %>
+
+              <td class="py-2 pr-2 text-gray-700">
+                <%= s.subject ? s.subject.path.map(&:name).join(" › ") : "(No subject)" %>
               </td>
-              <td class="py-2 pr-2 text-gray-600">
-                <%= s.new_count %> new · <%= s.review_count %> review
+
+              <td class="py-2 px-2 text-center whitespace-nowrap">
+                <span class="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-700">
+                  <strong class="ml-1"><%= total %></strong>
+                </span>
               </td>
+
+              <td class="py-2 px-2 text-center whitespace-nowrap">
+                <span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs
+                            <%= new_cards.positive? ? "bg-[#e6f0ff] text-blue-700 font-bold" : "bg-[#e6f0ff] text-[#0b57d0]" %>">
+                  New <strong class="ml-1"><%= new_cards %></strong>
+                </span>
+              </td>
+
+              <td class="py-2 px-2 text-center whitespace-nowrap">
+                <span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs
+                            <%= due_now.positive? ? "bg-[#e9f7ef] text-emerald-700 font-bold" : "bg-[#e9f7ef] text-[#1e7e34]" %>">
+                  Due <strong class="ml-1"><%= due_now %></strong>
+                </span>
+              </td>
+
               <td class="py-2 pr-2"><%= session_status_badge(s) %></td>
-              <td class="py-2 pr-2">
-                <%= link_to "Open", session_path(s), class: "underline hover:text-blue-700" %>
+
+              <td class="py-2 px-2 text-center">
+                <%= link_to "Open",
+                      session_path(s),
+                      class: "inline-block bg-brand-blue text-white px-2.5 py-1.5 rounded hover:bg-gold text-xs font-medium" %>
               </td>
             </tr>
           <% end %>

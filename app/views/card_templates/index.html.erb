@@ -60,16 +60,22 @@
                 <%= c&.full_citation.presence || "(untitled)" %>
               </td>
               <td class="py-1 pr-1 align-top text-gray-500">
-                <%= entry.subject&.name || "(unknown topic)" %>
+                <%= relative_subject_breadcrumb(entry.subject, @subject).presence || "(unknown topic)" %>
               </td>
               <td class="py-1 pr-0 align-top">
                 <div class="flex justify-center items-center gap-2 whitespace-nowrap">
-                  <%= link_to "Edit", edit_entry_path(entry), class: "underline" %>
+                  <%= link_to "Edit",
+                        edit_entry_path(entry, subject_id: @subject.id),
+                        class: "underline" %>
                   <%= button_to "Delete",
-                        entry_path(entry),
+                        entry_path(entry, subject_id: @subject.id),
                         method: :delete,
                         data: { turbo_confirm: "Delete this case?" },
-                        form:  { class: "inline" },
+                        form: {
+                          data: { turbo_confirm: "Delete this case?" },
+                          onsubmit: "return confirm('Delete this case?');",
+                          class: "inline"
+                        },
                         class: "underline text-black bg-transparent p-0 border-0 cursor-pointer align-baseline" %>
                 </div>
               </td>
@@ -115,11 +121,14 @@
                     <span class="text-gray-400" title="Delete provisions first">Delete Act</span>
                   <% else %>
                     <%= button_to "Delete Act",
-                          act_path(act),
-                          method: :delete,
-                          data: { turbo_confirm: "Delete this Act?" },
-                          form:  { class: "inline" },
-                          class: "underline text-red-600 bg-transparent p-0 border-0 cursor-pointer align-baseline" %>
+                      act_path(act),
+                      method: :delete,
+                      form: {
+                        data: { turbo_confirm: "Delete this Act? (You must delete its provisions first if any.)" },
+                        onsubmit: "return confirm('Delete this Act? (You must delete its provisions first if any.)');",
+                        class: "inline"
+                      },
+                      class: "underline text-red-600 bg-transparent p-0 border-0 cursor-pointer align-baseline" %>
                   <% end %>
                 </div>
               </td>
@@ -180,19 +189,23 @@
                   </div>
                 </td>
                 <td class="py-1 pr-1 align-top text-gray-500">
-                  <%= entry.subject&.name || "(unknown topic)" %>
+                  <%= relative_subject_breadcrumb(entry.subject, @subject).presence || "(unknown topic)" %>
                 </td>
                 <td class="py-1 pr-0 align-top">
                   <div class="flex justify-center items-center gap-2 whitespace-nowrap">
                     <% if s&.act %>
                       <%= link_to "Edit",
                             edit_act_provision_path(s.act, s, subject_id: @subject.id),
-                            class: "underline" %>
+                            class: "underline text-sm" %>
                       <%= button_to "Delete",
                             act_provision_path(s.act, s, subject_id: @subject.id),
                             method: :delete,
                             data: { turbo_confirm: "Delete this provision?" },
-                            form:  { class: "inline" },
+                            form: {
+                              data: { turbo_confirm: "Delete this provision?" },
+                              onsubmit: "return confirm('Delete this provision?');",
+                              class: "inline"
+                            },
                             class: "underline text-black bg-transparent p-0 border-0 cursor-pointer align-baseline" %>
                     <% else %>
                       <span class="text-gray-400">No Act</span>

@@ -21,15 +21,11 @@
   </div>
 
   <div class="mt-4">
-    <%= f.label :parent_id, "Parent Subject", class: "block font-medium" %><br>
-
+    <%= f.label :parent_id, "Parent Subject", class: "block font-medium text-gray-700" %>
     <%= f.select :parent_id,
-          options_for_select(
-            [["(none)", nil]] + subject_options_for_select(current_user),
-            subject.parent_id
-          ),
-          {},
-          class: "border rounded px-2 py-1 w-full mt-1" %>
+      options_for_select([["(none)", nil]] + subject_options_for_select(current_user), subject.parent_id),
+      {},
+      class: "mt-1 block w-full rounded-md border border-gray-300 bg-white shadow-sm focus:border-brand-blue focus:ring-2 focus:ring-brand-blue text-sm px-3 py-2" %>
   </div>
 
 

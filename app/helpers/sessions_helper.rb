@@ -30,6 +30,12 @@ module SessionsHelper
       tone
     ].join(" ")
 
-    content_tag(:span, label, class: classes, role: "status", aria: { label: label })
+    content_tag(
+      :span,
+      label,
+      class: "#{classes} inline-flex justify-center items-center min-w-[8rem] px-2 py-1 rounded",
+      role: "status",
+      aria: { label: label }
+    )
   end
 end

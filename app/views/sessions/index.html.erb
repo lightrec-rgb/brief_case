@@ -16,19 +16,25 @@
         <%= subject ? subject.path.map(&:name).join(" › ") : "(No subject)" %>
       </h2>
 
-      <table class="w-full text-sm">
+      <table class="w-full text-sm table-fixed">
+        <colgroup>
+          <col style="width:32%"><!-- Name -->
+          <col style="width:10%"><!-- Total -->
+          <col style="width:10%"><!-- New -->
+          <col style="width:10%"><!-- Due -->
+          <col style="width:18%"><!-- Status -->
+          <col style="width:20%"><!-- Actions -->
+        </colgroup>
         <thead>
           <tr class="border-b">
             <th class="py-2 pr-2 text-left">Name</th>
             <th class="py-2 px-2 text-center">Total</th>
             <th class="py-2 px-2 text-center">New</th>
             <th class="py-2 px-2 text-center">Due</th>
-            <th class="py-2 px-2 text-left">Status</th>
-            <th class="py-2 px-2 text-left">Updated</th>
+            <th class="py-2 px-2 text-center">Status</th>
             <th class="py-2 px-2 text-center">Actions</th>
           </tr>
         </thead>
-
         <tbody>
           <% sessions.each do |s| %>
             <% total     = s.total_count.to_i %>
@@ -37,13 +43,15 @@
 
             <tr class="border-b align-middle">
               <td class="py-2 pr-2 align-middle">
-                <div class="font-medium"><%= s.name.presence || "Session ##{s.id}" %></div>
+                <div class="font-medium truncate max-w-[40ch]">
+                  <%= s.name.presence || "Session ##{s.id}" %>
+                </div>
 
                 <div class="text-xs text-gray-500 h-5">
                   <% now = Time.current.utc %>
                   <% next_due_any = s.session_items.to_a
-                                     .select { |si| si.due_at && si.due_at > now && si.fsrs_state_i != Fsrs::State::NEW }
-                                     .map(&:due_at).min %>
+                                    .select { |si| si.due_at && si.due_at > now && si.fsrs_state_i != Fsrs::State::NEW }
+                                    .map(&:due_at).min %>
                   <% if next_due_any.present? && due_now.zero? %>
                     Next due:
                     <span
@@ -76,8 +84,7 @@
                 </span>
               </td>
 
-              <td class="py-2 px-2 align-middle"><%= session_status_badge(s) %></td>
-              <td class="py-2 px-2 text-gray-500 align-middle"><%= l(s.updated_at, format: :short) %></td>
+              <td class="py-2 px-2 text-center align-middle"><%= session_status_badge(s) %></td>
 
               <td class="py-2 px-2 text-center align-middle">
                 <div class="inline-flex items-center gap-2">
@@ -131,42 +138,58 @@
   <% if @archived_sessions.blank? %>
     <p class="text-gray-500">No archived sessions.</p>
   <% else %>
-    <table class="w-full text-sm">
+    <table class="w-full text-sm table-fixed">
+      <colgroup>
+        <col style="width:32%"><!-- Name -->
+        <col style="width:10%"><!-- Total -->
+        <col style="width:20%"><!-- Subject -->
+        <col style="width:18%"><!-- Completed (aligns with Status) -->
+        <col style="width:20%"><!-- Actions -->
+      </colgroup>
       <thead>
         <tr class="border-b">
           <th class="py-2 pr-2 text-left">Name</th>
-          <th class="py-2 px-2 text-left">Subject</th> <%# NEW COLUMN %>
           <th class="py-2 px-2 text-center">Total</th>
-          <th class="py-2 px-2 text-left">Completed</th>
+          <th class="py-2 px-2 text-center">Subject</th>
+          <th class="py-2 px-2 text-center">Completed</th> <!-- centered to match Status -->
           <th class="py-2 px-2 text-center">Actions</th>
         </tr>
       </thead>
       <tbody>
         <% @archived_sessions.each do |s| %>
           <tr class="border-b align-middle text-gray-600">
+            <!-- Name cell unchanged -->
             <td class="py-2 pr-2 align-middle">
-              <div class="font-medium"><%= s.name.presence || "Session ##{s.id}" %></div>
+              <div class="font-medium truncate max-w-[40ch]">
+                <%= s.name.presence || "Session ##{s.id}" %>
+              </div>
             </td>
 
-            <%# SUBJECT NOW SHOWN HERE %>
-            <td class="py-2 px-2 align-middle text-gray-700">
-              <%= s.subject ? s.subject.path.map(&:name).join(" › ") : "(No subject)" %>
-            </td>
+            <!-- Total -->
+              <td class="py-2 px-2 text-center whitespace-nowrap align-middle">
+                <span class="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-700">
+                  <strong class="ml-1"><%= s.total_count.to_i %></strong>
+                </span>
+              </td>
 
-            <td class="py-2 px-2 text-center whitespace-nowrap align-middle">
-              <span class="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-700">
-                <strong class="ml-1"><%= s.total_count.to_i %></strong>
-              </span>
-            </td>
+              <!-- Subject -->
+              <td class="py-2 px-2 text-center align-middle text-gray-700">
+                <% subj_path = s.subject ? s.subject.path.map(&:name).join(" › ") : "(No subject)" %>
+                <div class="truncate inline-block max-w-[200px]" title="<%= subj_path %>">
+                  <%= subj_path %>
+                </div>
+              </td>
 
-            <td class="py-2 px-2 align-middle">
+            <!-- Completed aligned like Status -->
+            <td class="py-2 px-2 text-center align-middle">
               <%= l(s.completed_at || s.updated_at, format: :short) %>
             </td>
 
+            <!-- Actions (centered, same width as active) -->
             <td class="py-2 px-2 text-center align-middle">
               <div class="inline-flex items-center gap-2">
                 <%= button_to "Reopen",
-                      reopen_session_path(s), # uses SessionsController#reopen
+                      reopen_session_path(s),
                       method: :post,
                       class: "inline-block bg-brand-blue text-white px-2.5 py-1.5 rounded hover:bg-gold text-xs font-medium" %>
 

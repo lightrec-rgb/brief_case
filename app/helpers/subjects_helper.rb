@@ -12,6 +12,31 @@ module SubjectsHelper
     subject.children.none? && subject.card_templates.none?
   end
 
+  # Shows the entry_subject path below current_subject
+  # Otherwise falls back to path without root
+  def relative_subject_breadcrumb(entry_subject, current_subject)
+    return "" unless entry_subject
+
+    # If no current subject, fall back to path minus root
+    unless current_subject
+      names = entry_subject.path.map(&:name)
+      return names.length > 1 ? names[1..].join(" › ") : names.first.to_s
+    end
+
+    path = entry_subject.path
+    idx  = path.index { |s| s.id == current_subject.id }
+
+    if idx # current_subject is in the path (ancestor or same)
+      tail = path[(idx + 1)..] || []
+      return current_subject.name if tail.blank? # same node → show its own name
+      tail.map(&:name).join(" › ")        # descendants → show below current
+    else
+      # Not in the same branch; show path minus root as a reasonable fallback
+      names = path.map(&:name)
+      names.length > 1 ? names[1..].join(" › ") : names.first.to_s
+    end
+  end
+
   private
 
   # Build a breadcrumb string for subjects and children

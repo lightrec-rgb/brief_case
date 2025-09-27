@@ -67,7 +67,7 @@ class CardTemplatesController < ApplicationController
     end
 
     if @subject
-      tree_ids = @subject.root.subtree_ids
+      tree_ids = @subject.subtree_ids
 
       @acts = current_user.acts
                           .where(subject_id: tree_ids)

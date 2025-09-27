@@ -1,4 +1,5 @@
-<%# Back link uses the computed @return_subject_id, which prefers params → session → entry subject %>
+<%# app/views/card_templates/show.html.erb %>
+
 <div class="mb-4">
   <%= link_to "← Back to Cards", entries_path(subject_id: @return_subject_id),
       class: "text-sm underline text-gray-700 hover:text-gray-900" %>
@@ -6,42 +7,60 @@
 
 <% if @entry.kind == "Case" %>
   <% c = @entry.case_detail %>
-  <h1 class="text-xl font-semibold mb-2"><%= c&.case_name.presence || "(untitled)" %></h1>
-  <p class="text-gray-600 mb-2"><strong>Subject:</strong> <%= @entry.subject&.name %></p>
-  <p class="mb-4"><strong>Citation:</strong> <%= c&.full_citation.presence || "—" %></p>
+  <h1 class="text-2xl font-semibold tracking-tight mb-1">
+    <%= c&.case_name.presence || "(untitled)" %>
+  </h1>
+  <div class="text-sm text-gray-600 mb-5 flex flex-wrap gap-x-4 gap-y-1">
+    <div><span class="font-medium text-gray-700">Subject:</span> <%= @entry.subject&.name %></div>
+    <div class="shrink-0 hidden sm:block text-gray-300">•</div>
+    <div><span class="font-medium text-gray-700">Citation:</span> <%= c&.full_citation.presence || "—" %></div>
+  </div>
 
-  <div class="grid gap-4">
-    <div>
-      <h2 class="font-semibold">Material Facts</h2>
-      <%= c&.material_facts.present? ? simple_format(c.material_facts) : content_tag(:p, "—", class: "text-gray-500") %>
-    </div>
-    <div class="mt-8">
-      <h2 class="font-semibold">Issue</h2>
-      <%= c&.issue.present? ? simple_format(c.issue) : content_tag(:p, "—", class: "text-gray-500") %>
-    </div>
-    <div class="mt-8">
-      <h2 class="font-semibold">Key Principle</h2>
-      <%= c&.key_principle.present? ? simple_format(c.key_principle) : content_tag(:p, "—", class: "text-gray-500") %>
-    </div>
+  <div class="space-y-8">
+    <section>
+      <h2 class="text-base font-semibold text-gray-900 mb-1.5">Issue</h2>
+      <div class="text-gray-900 whitespace-pre-line leading-relaxed"><%= c&.issue.present? ? c.issue : "—" %></div>
+    </section>
+    <section>
+      <h2 class="text-base font-semibold text-gray-900 mb-1.5">Material Facts</h2>
+      <div class="text-gray-900 whitespace-pre-line leading-relaxed"><%= c&.material_facts.present? ? c.material_facts : "—" %></div>
+    </section>
+    <section>
+      <h2 class="text-base font-semibold text-gray-900 mb-1.5">Key Principle</h2>
+      <div class="text-gray-900 whitespace-pre-line leading-relaxed"><%= c&.key_principle.present? ? c.key_principle : "—" %></div>
+    </section>
   </div>
 
 <% elsif @entry.kind == "Provision" %>
   <% s = @entry.provision_detail %>
-  <h1 class="text-xl font-semibold mb-2">
+
+  <h1 class="text-2xl font-semibold tracking-tight mb-1">
     <%= s&.act&.act_name.presence || "(untitled Act)" %>
   </h1>
-  <p class="text-gray-600 mb-2"><strong>Subject:</strong> <%= @entry.subject&.name %></p>
-  <p class="mb-4"><strong>Provision:</strong> <%= s&.provision_ref.presence || "—" %></p>
 
-  <div class="grid gap-4">
-    <div>
-      <h2 class="font-semibold">Provision Text</h2>
-      <%= s&.provision_text.present? ? simple_format(s.provision_text) : content_tag(:p, "—", class: "text-gray-500") %>
-    </div>
+  <div class="text-sm text-gray-600 mb-5 flex flex-wrap gap-x-4 gap-y-1">
+    <div><span class="font-medium text-gray-700">Subject:</span> <%= @entry.subject&.name %></div>
+    <div class="shrink-0 hidden sm:block text-gray-300">•</div>
+    <div><span class="font-medium text-gray-700">Provision:</span> <%= s&.provision_ref.presence || "—" %></div>
+    <% if s&.summary.present? %>
+      <div class="shrink-0 hidden sm:block text-gray-300">•</div>
+      <div><span class="font-medium text-gray-700">Summary:</span> <%= s.summary %></div>
+    <% end %>
   </div>
+
+  <section>
+    <h2 class="text-base font-semibold text-gray-900 mb-1.5">Provision Text</h2>
+    <% if s&.provision_text.present? %>
+      <div class="text-gray-900 text-base leading-7 break-words">
+        <%= simple_format(s.provision_text, {}, sanitize: false) %>
+      </div>
+    <% else %>
+      <p class="text-gray-500">—</p>
+    <% end %>
+  </section>
 <% end %>
 
-<p class="mt-6">
+<p class="mt-8 text-sm">
   <%= link_to "Edit",
         edit_entry_path(@entry, subject_id: @return_subject_id),
         class: "underline" %>
