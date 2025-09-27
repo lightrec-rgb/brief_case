@@ -56,5 +56,9 @@
   <div class="mt-6">
     <%= f.submit (obj.persisted? ? "Update Act" : "Create Act"),
           class: "inline-flex items-center rounded-md bg-brand-blue px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-gold focus:outline-none focus:ring-2 focus:ring-brand-blue" %>
+
+    <%= link_to "Cancel",
+          entries_path(subject_id: (params[:subject_id].presence || obj.subject_id)),
+          class: "ml-3 text-sm underline" %>
   </div>
 <% end %>

@@ -39,50 +39,41 @@
     </div>
 
     <!-- Body -->
-    <div class="p-4">
-      <h2 class="font-semibold mb-2 text-gray-900">Question</h2>
-      <p class="mb-4 whitespace-pre-line text-gray-900"><%= si.question.presence || "(No question text)" %></p>
+    <div class="p-4 flex flex-col h-[520px]"> <%# fixed height so footer stays put %>
 
-      <!-- Reveal (no arrow; simple toggle) -->
-      <div id="reveal" class="mt-2">
-        <button
-          id="reveal-btn"
-          type="button"
-          class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-brand-blue text-white hover:bg-gold transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-blue"
-          onclick="document.getElementById('answer').classList.remove('hidden'); document.getElementById('reveal').classList.add('hidden'); this.setAttribute('aria-expanded','true');"
-          aria-controls="answer"
-          aria-expanded="false"
-        >
-          <span class="inline-block w-2 h-2 rounded-full bg-white/80"></span>
-          <span class="font-medium">Show answer</span>
-          <span class="ml-1 text-xs opacity-80">(Click / Space)</span>
-        </button>
+      <!-- Scrollable content area (question + answer text) -->
+      <div class="flex-1 overflow-auto pr-1">
+        <h2 class="font-semibold mb-2 text-gray-900">Question</h2>
+        <p class="mb-4 whitespace-pre-line text-gray-900"><%= si.question.presence || "(No question text)" %></p>
+
+        <!-- Answer text (revealed later) -->
+        <div id="answer" class="hidden mt-4">
+          <h2 class="font-semibold mb-2 text-gray-900">Answer</h2>
+          <p class="whitespace-pre-line text-gray-900"><%= si.answer.presence || "(No answer text)" %></p>
+        </div>
       </div>
-      
-      <script>
-        (function () {
-          const btn = document.getElementById('reveal-btn');
-          if (!btn) return;
 
-          document.addEventListener('keydown', function (e) {
-            // Space key (also handle older keyCode)
-            if ((e.code === 'Space' || e.key === ' ' || e.keyCode === 32)) {
-              // Only act if the reveal block is still visible (answer is hidden)
-              const reveal = document.getElementById('reveal');
-              const answer = document.getElementById('answer');
-              if (reveal && !reveal.classList.contains('hidden') && answer && answer.classList.contains('hidden')) {
-                e.preventDefault(); // stop page from scrolling
-                btn.click();        // trigger the same logic as clicking
-              }
-            }
-          }, { capture: true });
-        })();
-      </script>
+      <!-- Footer: reveal button (just above divider) + ratings -->
+      <div class="mt-4">
+        <!-- Show Answer button sits directly above the divider -->
+        <div id="reveal">
+          <button
+            id="reveal-btn"
+            type="button"
+            class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-brand-blue text-white hover:bg-gold transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-blue"
+            onclick="document.getElementById('answer').classList.remove('hidden'); document.getElementById('reveal').classList.add('hidden'); this.setAttribute('aria-expanded','true');"
+            aria-controls="answer"
+            aria-expanded="false">
+            <span class="font-medium">Show answer</span>
+            <span class="ml-1 text-xs opacity-80">(Click / Space)</span>
+          </button>
+        </div>
 
-      <!-- Answer + ratings -->
-      <div id="answer" class="hidden">
-        <h2 class="font-semibold mt-4 mb-2 text-gray-900">Answer</h2>
-        <p class="whitespace-pre-line mb-4 text-gray-900"><%= si.answer.presence || "(No answer text)" %></p>
+        <!-- Divider separating reveal from ratings -->
+        <div class="h-px bg-gray-200 my-3"></div>
+
+        <!-- Ratings pinned below -->
+        <p class="mb-2 text-sm text-gray-600">How well did you answer this question?</p>
 
         <%= form_with url: advance_session_path(@session), method: :post do %>
           <table class="w-full table-fixed text-center">
@@ -103,14 +94,12 @@
                     <span title="<%= l(due, format: :long) %>">
                       <%= distance_of_time_in_words(Time.current, due, include_seconds: true) %>
                     </span>
-                  <% else %>
-                    —
-                  <% end %>
+                  <% else %> — <% end %>
                 </td>
               <% end %>
             </tr>
 
-            <!-- Row 2: buttons (forced one row) -->
+            <!-- Row 2: buttons -->
             <tr>
               <td class="px-1 py-1">
                 <button name="rating" value="1" type="submit"
@@ -139,9 +128,9 @@
             </tr>
           </table>
         <% end %>
-      </div> <!-- /#answer -->
-    </div> <!-- /p-4 -->
-  </div> <!-- /card -->
+      </div>
+    </div>
+  </div>
 
   <div class="mt-4">
     <p class="text-sm text-gray-500 mb-2">Progress saves automatically</p>
@@ -157,6 +146,45 @@
     <%= link_to 'Back to Learn', sessions_path, class: 'underline text-brand-blue hover:text-gold' %>
   </div>
 <% end %>
+
+<script>
+  (function () {
+    function bindSpaceReveal() {
+      var btn    = document.getElementById('reveal-btn');
+      var reveal = document.getElementById('reveal');
+      var answer = document.getElementById('answer');
+      if (!btn || !reveal || !answer) return;
+
+      // Avoid double-binding
+      if (window.__spaceRevealBound) return;
+      window.__spaceRevealBound = true;
+
+      document.addEventListener('keydown', function (e) {
+        // Only handle Space
+        if (!(e.code === 'Space' || e.key === ' ' || e.keyCode === 32)) return;
+
+        // Don’t trigger when typing in inputs/textareas/selects or contenteditable
+        var t = e.target;
+        var isFormField =
+          t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable);
+        if (isFormField) return;
+
+        // Only when reveal is visible and answer still hidden
+        if (!reveal.classList.contains('hidden') && answer.classList.contains('hidden')) {
+          e.preventDefault();
+          btn.click();
+        }
+      }, { capture: true });
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', bindSpaceReveal);
+    } else {
+      bindSpaceReveal();
+    }
+    document.addEventListener('turbo:load', bindSpaceReveal);
+  })();
+</script>
 
 <% next_due = @session.session_items.where("due_at > ?", Time.current.utc).minimum(:due_at) %>
 <% if next_due.present? %>

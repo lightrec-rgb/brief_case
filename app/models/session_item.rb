@@ -58,7 +58,6 @@ class SessionItem < ApplicationRecord
     logs = scheduler.repeat(card, now)
     info = logs[rating.to_i] || logs[Fsrs::Rating::GOOD]
     new_card = info.card
-
     due_time = to_time(new_card.due)
 
     update!(
@@ -138,7 +137,7 @@ class SessionItem < ApplicationRecord
     c.due = Time.current.utc.to_datetime
     update!(
       fsrs_card:      c.to_h,
-      due_at:         c.due.to_time,
+      due_at:         to_time(c.due),
       last_review_at: nil,
       reps:           0,
       lapses:         0,
@@ -162,13 +161,13 @@ class SessionItem < ApplicationRecord
     h.deep_symbolize_keys
   end
 
-  # Make all date/time format a time object.
+  # Make all date/time format a time.
   def to_time(dt_like)
     case dt_like
-    when Time     then dt_like
-    when DateTime then dt_like.to_time
+    when Time     then dt_like.utc
+    when DateTime then dt_like.to_time.utc
     else
-      Time.zone.parse(dt_like.to_s) rescue Time.current
+      (Time.iso8601(dt_like.to_s) rescue Time.zone.parse(dt_like.to_s) rescue Time.current).utc
     end
   end
 
@@ -181,7 +180,7 @@ class SessionItem < ApplicationRecord
     c.due = Time.current.utc.to_datetime
     update!(
       fsrs_card:      c.to_h,
-      due_at:         c.due.to_time,
+      due_at:         to_time(c.due),
       last_review_at: nil,
       reps:           0,
       lapses:         0

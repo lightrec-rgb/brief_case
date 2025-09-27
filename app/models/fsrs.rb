@@ -102,10 +102,31 @@ module Fsrs
     private
 
     def update_due_dates(now, hard_interval, good_interval, easy_interval)
-      @again.due = now + 5.minutes
-      @hard.due = hard_interval.positive? ? now + hard_interval.days : now + 10.minutes
-      @good.due = now + good_interval.days
-      @easy.due = now + easy_interval.days
+      again_due = if @again.scheduled_days.zero?
+                    # minute-scale retry grows with lapses: 1m, 2m, ... up to 10m
+                    now + [ [ 1 + @again.lapses.to_i, 10 ].min, 1 ].max.minutes
+      else
+                    now + @again.scheduled_days.days
+      end
+
+      hard_due  = if @hard.scheduled_days.zero?
+                    # ensure Hard > Again in learning; grow slowly with reps
+                    base = 2 + (@hard.reps.to_i / 2) # 2,3,3,4,...
+                    now + [ base, 15 ].min.minutes
+      else
+                    now + @hard.scheduled_days.days
+      end
+
+      good_due  = now + @good.scheduled_days.days
+      easy_due  = now + @easy.scheduled_days.days
+
+      # Only ensure Hard > Again (don’t touch Good/Easy).
+      hard_due = again_due + 1 if hard_due <= again_due
+
+      @again.due = again_due
+      @hard.due  = hard_due
+      @good.due  = good_due
+      @easy.due  = easy_due
     end
 
     def update_schedule_days(hard_interval, good_interval, easy_interval)

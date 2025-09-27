@@ -116,6 +116,9 @@ class Session < ApplicationRecord
 
       session_items.destroy_all
       ordered.each_with_index do |obj, idx|
+        pair = obj.as_card.build_pair
+        next unless pair[:question].present? && pair[:answer].present?
+
         si = session_items.create!(
           item_type: obj.class.name,
           item_id:   obj.id,
@@ -128,9 +131,9 @@ class Session < ApplicationRecord
       update!(
         name:         name || self.name,
         shuffled:     shuffled,
-        total_count:  ordered.size,
+        total_count:  session_items.count,
         done_count:   0,
-        current_pos:  ordered.size.positive? ? 1 : nil,
+        current_pos:  session_items.any? ? 1 : nil,
         status:       "draft",
         started_at:   nil,
         paused_at:    nil,
