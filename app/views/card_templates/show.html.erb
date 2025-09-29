@@ -61,9 +61,18 @@
 <% end %>
 
 <p class="mt-8 text-sm">
-  <%= link_to "Edit",
-        edit_entry_path(@entry, subject_id: @return_subject_id),
-        class: "underline" %>
+  <% if @entry.kind == "Provision" && @entry.provision_detail&.act %>
+    <%= link_to "Edit",
+          edit_act_provision_path(@entry.provision_detail.act,
+                                  @entry.provision_detail,
+                                  subject_id: @return_subject_id || @entry.subject_id),
+          class: "underline" %>
+  <% else %>
+    <%= link_to "Edit",
+          edit_entry_path(@entry, subject_id: @return_subject_id || @entry.subject_id),
+          class: "underline" %>
+  <% end %>
+
   ·
   <%= link_to "Back to Cards",
         entries_path(subject_id: @return_subject_id),

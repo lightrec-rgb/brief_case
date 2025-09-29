@@ -47,10 +47,12 @@ class SubjectsController < ApplicationController
         LOWER(TRIM(COALESCE(cases.case_name, ''))) ASC,
         card_templates.id ASC
       SQL
+    
+    tree_ids = @subject.root.subtree_ids
 
-    @acts = Act
-      .where(subject_id: subtree_ids)
-      .includes(:provisions)
+    @acts = (defined?(current_user.acts) ? current_user.acts : Act)
+      .where(subject_id: tree_ids)
+      .includes(:subject, :provisions)
       .order(Arel.sql("LOWER(TRIM(COALESCE(act_short_name, act_name))) ASC, acts.id ASC"))
 
     @provisions = CardTemplate

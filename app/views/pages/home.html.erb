@@ -4,41 +4,65 @@
     <div class="grid md:grid-cols-2 gap-8 items-center">
       <div>
         <h1 class="text-4xl font-bold tracking-tight">
-          Brief/Case — study law cases the smart way
+          Brief/Case — learn law cases & provisions the smart way
         </h1>
         <p class="mt-4 text-gray-600 leading-relaxed">
-          Create subjects, add cases, and practise with focused learning sessions. Track progress and build real exam confidence.
+          Build subject trees, add cases or legislative provisions, and practise with
+          spaced-repetition sessions. Track progress automatically and
+          arrive at exams confident.
         </p>
 
-        <div class="mt-6 flex gap-3">
+        <div class="mt-6 flex flex-wrap gap-3">
           <%= link_to "Get started", new_user_registration_path,
                 class: "bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700" %>
           <%= link_to "Sign in", new_user_session_path,
                 class: "px-4 py-2 rounded-md border hover:bg-gray-50" %>
+          <span class="text-xs text-gray-500 self-center">Free to start · No ads</span>
         </div>
       </div>
 
-      <!-- Visual / placeholder -->
-      <div class="rounded-xl border bg-white shadow-sm p-4">
-        <div class="text-sm text-gray-500 mb-2">How it works</div>
-        <ol class="space-y-2 text-sm">
-          <li class="flex gap-2">
-            <span class="inline-flex h-6 w-6 items-center justify-center rounded-full bg-blue-600 text-white text-xs">1</span>
-            Create a<strong>Subject</strong> (e.g., Torts → Negligence).
-          </li>
-          <li class="flex gap-2">
-            <span class="inline-flex h-6 w-6 items-center justify-center rounded-full bg-blue-600 text-white text-xs">2</span>
-            Add a<strong>Case</strong> with citation, facts, issues and key principles.
-          </li>
-          <li class="flex gap-2">
-            <span class="inline-flex h-6 w-6 items-center justify-center rounded-full bg-blue-600 text-white text-xs">3</span>
-            Start a<strong>Learn</strong> session to practise with flashcards.
-          </li>
-        </ol>
-
+<!-- Visual / “How it works” -->
+<div class="rounded-xl border bg-white shadow-sm p-6">
+  <h3 class="text-sm font-semibold text-gray-700 mb-4">How it works</h3>
+  <div class="space-y-4">
+    <div class="flex items-start gap-3">
+      <div class="flex h-8 w-8 items-center justify-center rounded-full bg-blue-600 text-white text-sm font-medium">
+        1
       </div>
+      <p class="text-sm text-gray-700">
+        Create a <strong>Subject</strong> tree (e.g., <em>Torts → Negligence → Duty</em>).
+      </p>
+    </div>
+
+    <div class="flex items-start gap-3">
+      <div class="flex h-8 w-8 items-center justify-center rounded-full bg-blue-600 text-white text-sm font-medium">
+        2
+      </div>
+      <p class="text-sm text-gray-700">
+        Add a <strong>Case</strong> (citation, facts, issue, principle) or a <strong>Provision</strong> linked to an <strong>Act</strong>.
+      </p>
+    </div>
+
+    <div class="flex items-start gap-3">
+      <div class="flex h-8 w-8 items-center justify-center rounded-full bg-blue-600 text-white text-sm font-medium">
+        3
+      </div>
+      <p class="text-sm text-gray-700">
+        Start a <strong>Learn</strong> session — reveal, rate (Again/Hard/Good/Easy), and keep moving.
+      </p>
+    </div>
+
+    <div class="flex items-start gap-3">
+      <div class="flex h-8 w-8 items-center justify-center rounded-full bg-blue-600 text-white text-sm font-medium">
+        4
+      </div>
+      <p class="text-sm text-gray-700">
+        Spaced repetition schedules what’s <strong>due next</strong>; your progress saves automatically.
+      </p>
     </div>
   </div>
+</div>
+
 </section>
 
 <!-- Features -->
@@ -49,19 +73,19 @@
       <div class="rounded-lg bg-white p-5 border">
         <h3 class="font-semibold">Nested subjects</h3>
         <p class="mt-2 text-gray-600 text-sm">
-          Organise by topic with a collapsible tree (e.g., Torts → Negligence → Duty).
+          Organise topics in a clear hierarchy (e.g., Torts → Negligence → Duty), with breadcrumbs everywhere.
         </p>
       </div>
       <div class="rounded-lg bg-white p-5 border">
-        <h3 class="font-semibold">Structured cases</h3>
+        <h3 class="font-semibold">Structured entries</h3>
         <p class="mt-2 text-gray-600 text-sm">
-          Capture citation, facts, issue, and key principle for each case.
+          Capture <strong>cases</strong> (citation, facts, issue, principle) and <strong>provisions</strong> linked to their <strong>Acts</strong>.
         </p>
       </div>
       <div class="rounded-lg bg-white p-5 border">
-        <h3 class="font-semibold">Focused sessions</h3>
+        <h3 class="font-semibold">Spaced repetition</h3>
         <p class="mt-2 text-gray-600 text-sm">
-          Randomised questions and marked outcomes support learning.
+          Smart due times based on your ratings. “New”, “Due now”, and “Review” counts keep you focused.
         </p>
       </div>
     </div>
@@ -73,7 +97,7 @@
   <div class="mx-auto max-w-5xl px-4 text-center">
     <h2 class="text-2xl font-semibold">Start learning smarter today</h2>
     <p class="mt-2 text-gray-600">
-      Join and build your first deck of cases in minutes.
+      Create your first deck of cases or provisions in minutes — and let spaced repetition handle the schedule.
     </p>
     <div class="mt-6 flex gap-3 justify-center">
       <%= link_to "Create an account", new_user_registration_path,
@@ -91,15 +115,30 @@
     <div class="mt-6 space-y-4">
       <details class="rounded-md border bg-white p-4">
         <summary class="font-semibold cursor-pointer">Is this free?</summary>
-        <p class="mt-2 text-gray-600 text-sm">Yes, you can sign up and start using it immediately.</p>
+        <p class="mt-2 text-gray-600 text-sm">
+          Yes — you can sign up and start immediately. No credit card required.
+        </p>
       </details>
+
       <details class="rounded-md border bg-white p-4">
         <summary class="font-semibold cursor-pointer">What can I study?</summary>
-        <p class="mt-2 text-gray-600 text-sm">You can currently add any legal case. Support for provisions will be coming soon.</p>
+        <p class="mt-2 text-gray-600 text-sm">
+          Add legal <strong>cases</strong> and <strong>provisions</strong> (linked to their <strong>Acts</strong>). More card types can be added over time.
+        </p>
       </details>
+
+      <details class="rounded-md border bg-white p-4">
+        <summary class="font-semibold cursor-pointer">How are review times chosen?</summary>
+        <p class="mt-2 text-gray-600 text-sm">
+          Brief/Case uses spaced repetition. Your ratings (Again/Hard/Good/Easy) adapt future due times so difficult cards resurface sooner.
+        </p>
+      </details>
+
       <details class="rounded-md border bg-white p-4">
         <summary class="font-semibold cursor-pointer">Can I come back to a session later?</summary>
-        <p class="mt-2 text-gray-600 text-sm">Yes. Your progress is saved when you exit a session. You can return to the session and pick up where you left off.</p>
+        <p class="mt-2 text-gray-600 text-sm">
+          Yes. Progress saves automatically. You can pause, return, or mark sessions completed and reopen them later.
+        </p>
       </details>
     </div>
   </div>

@@ -1,5 +1,5 @@
 <h1 class="text-2xl font-semibold mb-4">
-  Entries
+  Cards
   <% if @subject.present? && @entries.present? %>
     <span class="ml-2 text-sm text-gray-500">(<%= @entries.size %>)</span>
   <% end %>
@@ -116,7 +116,7 @@
                   <%= link_to "Add Provision",
                         new_act_provision_path(act, subject_id: @subject.id),
                         class: "underline" %>
-                  <%= link_to "Edit Act", edit_act_path(act), class: "underline" %>
+                  <%= link_to "Edit Act", edit_act_path(act, subject_id: @subject.id), class: "underline" %>
                   <% if act.provisions.exists? %>
                     <span class="text-gray-400" title="Delete provisions first">Delete Act</span>
                   <% else %>
