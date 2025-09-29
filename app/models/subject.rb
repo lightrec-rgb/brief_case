@@ -6,7 +6,7 @@ class Subject < ApplicationRecord
 
   # Acts live under a subject and so can't delete if there are still acts
   has_many :acts, dependent: :restrict_with_error
-  
+
   # A subject can have many card_templates and cannot be deleted until card_templates are
   has_many :card_templates, dependent: :destroy
 

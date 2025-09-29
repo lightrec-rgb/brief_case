@@ -47,7 +47,7 @@ class SubjectsController < ApplicationController
         LOWER(TRIM(COALESCE(cases.case_name, ''))) ASC,
         card_templates.id ASC
       SQL
-    
+
     tree_ids = @subject.root.subtree_ids
 
     @acts = (defined?(current_user.acts) ? current_user.acts : Act)
